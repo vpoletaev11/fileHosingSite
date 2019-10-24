@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/register.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="registerForm">
+        <form action="" method="post">
+            <p>Create username: <input required type="text" name="username"></p>
+            <p>Create password: <input required type="password" name="password1"></p>
+            <p>Repeat password: <input required type="password" name="password2"></p>
+            <p><input type="submit" value="Register"></p>
+            {{ .Warning}}
+        </form>
+    </div>
+</body>

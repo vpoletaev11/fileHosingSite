@@ -1,0 +1,20 @@
+.goback{
+    position: absolute;
+    width: 150px;
+    height: 60px;
+    background-color: #334d46;
+}
+
+.goback a { 
+    color: red;
+    text-decoration: none;
+}
+
+.uploadForm {
+    position: absolute;
+    width: 60%;
+    height: 100%;
+    margin-left: 20%;
+    background-color: #d1c2ba;
+
+}

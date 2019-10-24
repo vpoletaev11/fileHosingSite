@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload file</title>
+    <link rel="stylesheet" href="assets/css/upload.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="goback">
+        <a href="/"><h2>Go back</h2></a>
+    </div>
+
+    <div class="uploadForm">
+        <form action="" method="post">
+            <p>Filename: <input required type="text" name="filename"></p><br>
+            <p>Input description for uploading file:</p>
+            <textarea cols="80" rows="15" maxlength="500" name="description"></textarea>
+    
+            <p>Category: <select name="category">
+                <option selected="selected" value="other">other</option>
+                <option value="games">games</option>
+                <option value="documents">documents</option>
+                <option value="projects">projects</option>
+                <option value="music">music</option>
+               </select></p>
+                   
+            <p><input type="file"></input></p>
+
+            <input type="submit">
+        </form>
+
+    </div>
+</body>

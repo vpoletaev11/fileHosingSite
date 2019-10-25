@@ -21,6 +21,8 @@ func Page(db *sql.DB) http.HandlerFunc {
 		_, err = db.Exec(deleteSession, cookie.Value)
 		if err != nil {
 			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		newCookie := &http.Cookie{

@@ -6,7 +6,8 @@ import (
 	"net/http"
 )
 
-const deleteCookie = "DELETE FROM fileHostingSite.sessions WHERE cookie=?"
+// query to MySQL database to DELETE session
+const deleteSession = "DELETE FROM sessions WHERE cookie=?"
 
 // Page removes user cookie and redirect to login page
 func Page(db *sql.DB) http.HandlerFunc {
@@ -17,7 +18,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec(deleteCookie, cookie.Value)
+		_, err = db.Exec(deleteSession, cookie.Value)
 		if err != nil {
 			fmt.Println(err)
 		}

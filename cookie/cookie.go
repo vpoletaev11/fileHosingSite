@@ -9,11 +9,14 @@ import (
 )
 
 const (
-	userFromCookie = "SELECT username FROM fileHostingSite.sessions WHERE cookie=?;"
+	// query to MySQL database to SELECT username from sessions
+	userFromCookie = "SELECT username FROM sessions WHERE cookie=?;"
 
-	updateCookie = "UPDATE fileHostingSite.sessions SET cookie=? WHERE cookie=?;"
+	// query to MySQL database to rewrite cookie value
+	updateCookie = "UPDATE sessions SET cookie=? WHERE cookie=?;"
 
-	deleteCookie = "DELETE FROM fileHostingSite.sessions WHERE cookie=?"
+	// query to MySQL database to delete session
+	deleteSession = "DELETE FROM sessions WHERE cookie=?"
 )
 
 // CreateCookie creates cookie for user
@@ -51,7 +54,7 @@ func cookieValidator(db *sql.DB, r *http.Request) (string, http.Cookie) {
 
 	// handling case when cookie is out of date
 	if cookie.Expires.After(time.Now()) {
-		_, err = db.Exec(deleteCookie, cookie.Value)
+		_, err = db.Exec(deleteSession, cookie.Value)
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -14,6 +14,7 @@ import (
 const (
 	// query to MySQL database to SELECT password for user
 	selectPass = "SELECT password FROM users WHERE username = ?;"
+
 	// query to MySQL database to add cookie
 	insertCookie = "INSERT INTO sessions(username, cookie) VALUES(?, ?);"
 )

@@ -17,6 +17,9 @@ const (
 
 	// query to MySQL database to add cookie
 	insertCookie = "INSERT INTO sessions(username, cookie) VALUES(?, ?);"
+
+	// absolute path to template file
+	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/login.html"
 )
 
 // TemplateLog contain field with warning message for login page handler template
@@ -28,14 +31,15 @@ type TemplateLog struct {
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for login page
-		page, err := template.ParseFiles("templates/login.html")
+		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
 			fmt.Fprintln(w, "Internal error. Page not found")
+			return
 		}
 		switch r.Method {
 		case "GET":
 			// handling GET requests and response to them is login page
-			templateData := TemplateLog{""}
+			templateData := TemplateLog{Warning: ""}
 			page.Execute(w, templateData)
 			return
 		case "POST":
@@ -43,7 +47,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			username := r.FormValue("username")
 			password := r.FormValue("password")
 
-			// handle case when len(usernaem) > 20
+			// handle case when len(username) > 20
 			if len(username) > 20 {
 				templateData := TemplateLog{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
 				page.Execute(w, templateData)
@@ -76,7 +80,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			// hadnle case when password for username doesn't match with password from MySQL database
+			// handle case when password for username doesn't match with password from MySQL database
 			err := comparePasswords(hashPassDB, password)
 			if err != nil {
 				templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}

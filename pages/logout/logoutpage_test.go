@@ -53,18 +53,18 @@ func TestDBError(t *testing.T) {
 
 	sut := Page(db)
 
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	cookie := &http.Cookie{
 		Name:    "session_id",
 		Value:   "test",
 		Expires: time.Now().Add(30 * time.Minute),
 	}
 
-	r.AddCookie(cookie)
+	req.AddCookie(cookie)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 
-	sut(w, r)
+	sut(w, req)
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	bodyBytes, err := ioutil.ReadAll(w.Body)
 	require.NoError(t, err)
@@ -77,11 +77,11 @@ func TestNoCookie(t *testing.T) {
 	// db is not used in this test
 	sut := Page(nil)
 
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 
-	sut(w, r)
+	sut(w, req)
 	assert.Equal(t, w.Code, http.StatusFound)
 	assert.Equal(t, "/login", w.HeaderMap.Get("Location"))
 }

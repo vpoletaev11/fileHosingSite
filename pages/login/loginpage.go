@@ -16,7 +16,7 @@ const (
 	selectPass = "SELECT password FROM users WHERE username = ?;"
 
 	// query to MySQL database to add cookie
-	insertCookie = "INSERT INTO sessions(username, cookie) VALUES(?, ?);"
+	insertCookie = "INSERT INTO sessions (username, cookie) VALUES(?, ?);"
 
 	// absolute path to template file
 	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/login.html"
@@ -47,6 +47,20 @@ func Page(db *sql.DB) http.HandlerFunc {
 			username := r.FormValue("username")
 			password := r.FormValue("password")
 
+			//handle case when len(username) == 0
+			if username == "" {
+				templateData := TemplateLog{"<h2 style=\"color:red\">Username cannot be empty</h2>"}
+				page.Execute(w, templateData)
+				return
+			}
+
+			// handle case when len(password) == 0
+			if password == "" {
+				templateData := TemplateLog{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
+				page.Execute(w, templateData)
+				return
+			}
+
 			// handle case when len(username) > 20
 			if len(username) > 20 {
 				templateData := TemplateLog{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
@@ -71,7 +85,12 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// query to MySQL database to SELECT password for user.
 			// This query also checks is username exist
 			hashPassDB := ""
-			db.QueryRow(selectPass, username).Scan(&hashPassDB)
+			err := db.QueryRow(selectPass, username).Scan(&hashPassDB)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				w.WriteHeader(500)
+				return
+			}
 
 			// handle case when username doesn't exist
 			if hashPassDB == "" {
@@ -81,7 +100,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			}
 
 			// handle case when password for username doesn't match with password from MySQL database
-			err := comparePasswords(hashPassDB, password)
+			err = comparePasswords(hashPassDB, password)
 			if err != nil {
 				templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
 				page.Execute(w, templateData)

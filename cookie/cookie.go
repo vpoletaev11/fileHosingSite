@@ -20,7 +20,7 @@ const (
 )
 
 // CreateCookie creates cookie for user
-func CreateCookie(username string) (http.Cookie, error) {
+func CreateCookie() http.Cookie {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	cookieVal := make([]rune, 60)
 
@@ -37,7 +37,7 @@ func CreateCookie(username string) (http.Cookie, error) {
 		Expires: expiration,
 	}
 
-	return cookie, nil
+	return cookie
 }
 
 // cookieValidator returns username and cookie when cookie:

@@ -2,6 +2,7 @@ package login
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -76,13 +77,11 @@ func TestPageSuccessPOST(t *testing.T) {
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
 	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	apiURL := "http://localhost/login"
-
 	data := url.Values{}
 	data.Set("username", "example")
 	data.Add("password", "example")
 
-	r, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode())) // URL-encoded payload
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
@@ -100,6 +99,8 @@ func TestPageSuccessPOST(t *testing.T) {
 	bodyString := string(bodyBytes)
 
 	assert.Equal(t, "", bodyString)
+
+	assert.Equal(t, "/", w.Header().Get("Location"))
 
 	fromHandlerCookie := w.Result().Cookies()
 	assert.Equal(t, fromHandlerCookie[0].Name, "session_id")
@@ -138,7 +139,391 @@ func TestPageMissingTemplate(t *testing.T) {
 	assert.Equal(t, "Internal error. Page not found\n", bodyString)
 }
 
+// TestPageEmptyUsername tests case when username is empty.
+func TestPageEmptyUsername(t *testing.T) {
+	data := url.Values{}
+	data.Set("username", "")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(nil)
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Username cannot be empty</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageEmptyUsername tests case when password is empty.
+func TestPageEmptyPassword(t *testing.T) {
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(nil)
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Password cannot be empty</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageLargerUsername tests case when len(username) > 20.
+func TestPageLargerUsername(t *testing.T) {
+	data := url.Values{}
+	data.Set("username", "example_larger_than_20_characters")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(nil)
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Username cannot be longer than 20 characters</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageLargerPassword tests case when len(username) > 20.
+func TestPageLargerPassword(t *testing.T) {
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example_larger_than_20_characters")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(nil)
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Password cannot be longer than 20 characters</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestNonLowerCaseUsername tests case when username is non lower-case
+func TestNonLowerCaseUsername(t *testing.T) {
+	data := url.Values{}
+	data.Set("username", "Example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(nil)
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Please use lower case username</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageQuerySelectErr tests case when SELECT query returns error
+func TestPageQuerySELECTErr(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	//row := []string{"password"}
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnError(fmt.Errorf("test error"))
+
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(db)
+	sut(w, r)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">INTERNAL ERROR. Please try later</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageSELECTReturnsEmptyPass tests case when SELECT query returns empty password
+func TestPageSELECTReturnsEmptyPass(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"password"}
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow(""))
+
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(db)
+	sut(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Wrong username or password</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageComparePasswordsDoesntMatch tests case when comparePasswords() gets not matched password with hashed password and returns error
+func TestPageComparePasswordsDoesntMatch(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"password"}
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("broken hash"))
+
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(db)
+	sut(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">Wrong username or password</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
+// TestPageQuerySelectErr tests case when SELECT query returns error
+func TestPageQueryEXECErr(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"password"}
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
+	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}).WillReturnError(fmt.Errorf("test error"))
+
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(db)
+	sut(w, r)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/register" style="color:yellow">Not registered?</a></p>
+            <h2 style="color:red">INTERNAL ERROR. Please try later</h2>   
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
 // tests for comparePasswords():
+
 func TestComparePasswordSuccess(t *testing.T) {
 	plainPass := "example"
 	hashedPass := "$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"

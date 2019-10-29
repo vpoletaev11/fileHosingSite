@@ -49,35 +49,35 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 			//handle case when len(username) == 0
 			if username == "" {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Username cannot be empty</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be empty</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
 
 			// handle case when len(password) == 0
 			if password == "" {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be empty</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
 
 			// handle case when len(username) > 20
 			if len(username) > 20 {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
 
 			// handle case when len(password) > 20
 			if len(password) > 20 {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
 
 			// handling case when username is non-lowercase
 			if username != strings.ToLower(username) {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Please use lower case username</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Please use lower case username</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
@@ -87,14 +87,15 @@ func Page(db *sql.DB) http.HandlerFunc {
 			hashPassDB := ""
 			err := db.QueryRow(selectPass, username).Scan(&hashPassDB)
 			if err != nil {
-				w.Write([]byte(err.Error()))
 				w.WriteHeader(500)
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
+				page.Execute(w, templateData)
 				return
 			}
 
 			// handle case when username doesn't exist
 			if hashPassDB == "" {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
@@ -102,21 +103,19 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// handle case when password for username doesn't match with password from MySQL database
 			err = comparePasswords(hashPassDB, password)
 			if err != nil {
-				templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
 
 			// creating cookie
-			cookie, err := cookie.CreateCookie(username)
-			if err != nil {
-				fmt.Fprintln(w, err)
-				return
-			}
+			cookie := cookie.CreateCookie()
 
 			_, err = db.Exec(insertCookie, username, cookie.Value)
 			if err != nil {
-				fmt.Fprintln(w, err)
+				w.WriteHeader(500)
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
+				page.Execute(w, templateData)
 			}
 
 			// sending cookie

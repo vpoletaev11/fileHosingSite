@@ -33,6 +33,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 		// creating template for login page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintln(w, "Internal error. Page not found")
 			return
 		}

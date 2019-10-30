@@ -37,7 +37,7 @@ func (a anyString) Match(v driver.Value) bool {
 func TestPageSuccessGET(t *testing.T) {
 	sut := Page(nil)
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/login", nil)
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/registration", nil)
 	require.NoError(t, err)
 
 	sut(w, r)
@@ -79,7 +79,7 @@ func TestPageSuccessPost(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -103,12 +103,14 @@ func TestPageMissingTemplate(t *testing.T) {
 	lenOrigName := len(oldName)
 
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/login", nil)
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/registration", nil)
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
 	sut := Page(nil)
 	sut(w, r)
+
+	assert.Equal(t, 500, w.Code)
 
 	// renaming template file to original filename
 	defer func() {
@@ -133,7 +135,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -173,7 +175,7 @@ func TestPageEmptyPassword1(t *testing.T) {
 	data.Add("password1", "")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -213,7 +215,7 @@ func TestPageEmptyPassword2(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -253,7 +255,7 @@ func TestPageLargerUsername(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -293,7 +295,7 @@ func TestPageLargerPassword1(t *testing.T) {
 	data.Add("password1", "example_larger_than_20_characters")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -333,7 +335,7 @@ func TestPageLargerPassword2(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example_larger_than_20_characters")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -373,7 +375,7 @@ func TestPageNonLowerCaseUsernam(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -413,7 +415,7 @@ func TestPageMismatchingPasswords(t *testing.T) {
 	data.Add("password1", "example1")
 	data.Add("password2", "example2")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -457,7 +459,7 @@ func TestPageNotUniqueUsername(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -501,7 +503,7 @@ func TestPageUsernameInsertionDBInternalError(t *testing.T) {
 	data.Add("password1", "example")
 	data.Add("password2", "example")
 
-	r, err := http.NewRequest("POST", "http://localhost/register", strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", "http://localhost/registration", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
 
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")

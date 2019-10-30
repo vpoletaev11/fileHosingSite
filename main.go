@@ -27,7 +27,7 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
 	// registration page handler
-	http.HandleFunc("/register", registration.Page(db))
+	http.HandleFunc("/registration", registration.Page(db))
 
 	// login page handler
 	http.HandleFunc("/login", login.Page(db))

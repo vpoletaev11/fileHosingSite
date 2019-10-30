@@ -126,11 +126,13 @@ func TestPageMissingTemplate(t *testing.T) {
 	sut(w, r)
 
 	// renaming template file to original filename
-	oldName = newName
-	newName = oldName[:lenOrigName]
-	// todo defer
-	err = os.Rename(oldName, newName)
-	require.NoError(t, err)
+	defer func() {
+		// renaming template file to original filename
+		oldName = newName
+		newName = oldName[:lenOrigName]
+		err = os.Rename(oldName, newName)
+		require.NoError(t, err)
+	}()
 
 	// checking error handler works correct
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -177,7 +179,7 @@ func TestPageEmptyUsername(t *testing.T) {
 </body>`, bodyString)
 }
 
-// TestPageEmptyUsername tests case when password is empty.
+// TestPageEmptyPassword tests case when password is empty.
 func TestPageEmptyPassword(t *testing.T) {
 	data := url.Values{}
 	data.Set("username", "example")
@@ -253,7 +255,7 @@ func TestPageLargerUsername(t *testing.T) {
 </body>`, bodyString)
 }
 
-// TestPageLargerPassword tests case when len(username) > 20.
+// TestPageLargerPassword tests case when len(password) > 20.
 func TestPageLargerPassword(t *testing.T) {
 	data := url.Values{}
 	data.Set("username", "example")
@@ -291,8 +293,8 @@ func TestPageLargerPassword(t *testing.T) {
 </body>`, bodyString)
 }
 
-// TestNonLowerCaseUsername tests case when username is non lower-case
-func TestNonLowerCaseUsername(t *testing.T) {
+// TestPageNonLowerCaseUsername tests case when username is non lower-case
+func TestPageNonLowerCaseUsername(t *testing.T) {
 	data := url.Values{}
 	data.Set("username", "Example")
 	data.Add("password", "example")

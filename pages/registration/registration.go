@@ -13,6 +13,9 @@ import (
 // query to MySQL database to INSERT username and password
 const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
 
+// absolute path to template file
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/register.html"
+
 // TemplateReg contain field with warning message for registration page handler template
 type TemplateReg struct {
 	Warning template.HTML
@@ -22,16 +25,15 @@ type TemplateReg struct {
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for register page
-		page, err := template.ParseFiles("templates/register.html")
+		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
 			fmt.Fprintln(w, "Internal error. Page not found")
 			return
-
 		}
 
 		switch r.Method {
 		case "GET":
-			// handling GET requests and response to them is registeration page
+			// handling GET requests and response to them is registration page
 			templateData := TemplateReg{""}
 			page.Execute(w, templateData)
 			return
@@ -42,7 +44,28 @@ func Page(db *sql.DB) http.HandlerFunc {
 			password1 := r.FormValue("password1")
 			password2 := r.FormValue("password2")
 
-			// handle case when len(usernaem) > 20
+			// handle case when len(username) == 0
+			if len(username) == 0 {
+				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be empty</h2>"}
+				page.Execute(w, templateData)
+				return
+			}
+
+			// handle case when len(password1) == 0
+			if len(password1) == 0 {
+				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
+				page.Execute(w, templateData)
+				return
+			}
+
+			// handle case when len(password2) == 0
+			if len(password2) == 0 {
+				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
+				page.Execute(w, templateData)
+				return
+			}
+
+			// handle case when len(username) > 20
 			if len(username) > 20 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
 				page.Execute(w, templateData)
@@ -80,7 +103,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// creating salted hash from password
 			hashedPass, err := hashAndSalt(password1)
 			if err != nil {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Internal error. Try later</h2>"}
+				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				page.Execute(w, templateData)
 				return
 			}
@@ -96,7 +119,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 					return
 				}
 				// handling internal errors related with query to MySQL database
-				templateData := TemplateReg{"<h2 style=\"color:red\">Internal error. Try later</h2>"}
+				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				page.Execute(w, templateData)
 				return
 			}

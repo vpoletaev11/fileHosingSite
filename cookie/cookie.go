@@ -85,7 +85,8 @@ func AuthWrapper(pageHandler http.Handler, db *sql.DB) http.HandlerFunc {
 			fmt.Fprintln(w, "INTERNAL ERROR. Please try later.")
 			return
 		}
-		// handling  if cookie invalid
+
+		// handling case when cookie invalid
 		if username == "" {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return

@@ -29,6 +29,20 @@ func (a anyString) Match(v driver.Value) bool {
 	return true
 }
 
+type anyTime struct{}
+
+// ()Match() checks is time valid
+func (a anyTime) Match(v driver.Value) bool {
+	_, ok := v.(string)
+	if !ok {
+		return false
+	}
+	if len(v.(string)) != 19 {
+		return false
+	}
+	return true
+}
+
 func TestCreateCookie(t *testing.T) {
 	cookie1 := CreateCookie()
 	cookie2 := CreateCookie()
@@ -161,19 +175,19 @@ func TestCookieValidatorCookieExpiredErrorDB(t *testing.T) {
 	assert.Equal(t, "testing error", err.Error())
 }
 
-func Page() http.HandlerFunc {
+func page() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "test success")
+		fmt.Fprint(w, "test success")
 	}
 }
 
 func TestAuthWrapperSuccess(t *testing.T) {
-
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 
 	rows := []string{"expires", "username"}
 	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
+	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -186,7 +200,7 @@ func TestAuthWrapperSuccess(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(Page(), db)
+	sut := AuthWrapper(page(), db)
 
 	sut(w, r)
 
@@ -196,5 +210,99 @@ func TestAuthWrapperSuccess(t *testing.T) {
 	}
 	bodyString := string(bodyBytes)
 
+	assert.Equal(t, "test success", bodyString)
+}
+
+func TestAuthWrapperValidatorError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WillReturnError(fmt.Errorf("testing error"))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AuthWrapper(page(), db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
+}
+
+func TestAuthWrapperEmptyUsename(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), ""))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AuthWrapper(page(), db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "/login", w.Header().Get("Location"))
 	assert.Equal(t, "", bodyString)
+}
+
+func TestAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
+	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnError(fmt.Errorf("testing error"))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AuthWrapper(page(), db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
 }

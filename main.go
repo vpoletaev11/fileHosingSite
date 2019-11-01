@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// connecting to mySQL database
-	db, err := sql.Open("mysql", "perdator:@tcp(localhost:3306)/fileHostingSite")
+	db, err := sql.Open("mysql", "perdator:@tcp(localhost:3306)/fileHostingSite?parseTime=true") // ?parseTime=true asks the driver to scan DATE and DATETIME automatically to time.Time
 	if err != nil {
 		panic(err)
 	}
@@ -40,6 +40,8 @@ func main() {
 
 	// upload file page handler
 	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page(db), db))
+
+	go cookie.SessionsCleaner(db)
 
 	fmt.Println("starting server at :8080")
 	http.ListenAndServe(":8080", nil)

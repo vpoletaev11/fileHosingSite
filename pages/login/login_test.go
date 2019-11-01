@@ -32,6 +32,20 @@ func (a anyString) Match(v driver.Value) bool {
 	return true
 }
 
+type anyTime struct{}
+
+// ()Match() checks is input value are time
+func (a anyTime) Match(v driver.Value) bool {
+	_, ok := v.(string)
+	if !ok {
+		return false
+	}
+	if len(v.(string)) != 19 {
+		return false
+	}
+	return ok
+}
+
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
 	sut := Page(nil)
@@ -75,7 +89,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	require.NoError(t, err)
 	row := []string{"password"}
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
-	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}, anyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	data := url.Values{}
 	data.Set("username", "example")
@@ -483,7 +497,7 @@ func TestPageQueryEXECErr(t *testing.T) {
 	require.NoError(t, err)
 	row := []string{"password"}
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
-	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}).WillReturnError(fmt.Errorf("test error"))
+	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}, anyTime{}).WillReturnError(fmt.Errorf("test error"))
 
 	data := url.Values{}
 	data.Set("username", "example")

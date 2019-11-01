@@ -16,7 +16,7 @@ const (
 	selectPass = "SELECT password FROM users WHERE username = ?;"
 
 	// query to MySQL database to add cookie
-	insertCookie = "INSERT INTO sessions (username, cookie) VALUES(?, ?);"
+	insertCookie = "INSERT INTO sessions (username, cookie, expires) VALUES(?, ?, ?);"
 
 	// absolute path to template file
 	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/login.html"
@@ -112,7 +112,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// creating cookie
 			cookie := cookie.CreateCookie()
 
-			_, err = db.Exec(insertCookie, username, cookie.Value)
+			_, err = db.Exec(insertCookie, username, cookie.Value, cookie.Expires.Format("2006-01-02 15:04:05"))
 			if err != nil {
 				w.WriteHeader(500)
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}

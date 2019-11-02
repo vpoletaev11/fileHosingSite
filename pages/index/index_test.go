@@ -14,7 +14,7 @@ import (
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGet(t *testing.T) {
-	sut := Page(nil)
+	sut := Page(nil, "")
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil)
+	sut := Page(nil, "")
 	sut(w, r)
 
 	// renaming template file to original filename

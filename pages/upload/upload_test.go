@@ -13,7 +13,7 @@ import (
 )
 
 func TestPageSuccessGET(t *testing.T) {
-	sut := Page(nil)
+	sut := Page(nil, "")
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
 	require.NoError(t, err)
@@ -77,7 +77,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil)
+	sut := Page(nil, "")
 	sut(w, r)
 
 	assert.Equal(t, 500, w.Code)

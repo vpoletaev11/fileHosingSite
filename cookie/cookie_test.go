@@ -1,6 +1,7 @@
 package cookie
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"io/ioutil"
@@ -175,9 +176,9 @@ func TestCookieValidatorCookieExpiredErrorDB(t *testing.T) {
 	assert.Equal(t, "testing error", err.Error())
 }
 
-func page() http.HandlerFunc {
+func testHandler(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "test success")
+		fmt.Fprint(w, username)
 	}
 }
 
@@ -200,7 +201,7 @@ func TestAuthWrapperSuccess(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(page(), db)
+	sut := AuthWrapper(testHandler, db)
 
 	sut(w, r)
 
@@ -210,7 +211,7 @@ func TestAuthWrapperSuccess(t *testing.T) {
 	}
 	bodyString := string(bodyBytes)
 
-	assert.Equal(t, "test success", bodyString)
+	assert.Equal(t, "example", bodyString)
 }
 
 func TestAuthWrapperValidatorError(t *testing.T) {
@@ -230,7 +231,7 @@ func TestAuthWrapperValidatorError(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(page(), db)
+	sut := AuthWrapper(testHandler, db)
 
 	sut(w, r)
 
@@ -261,7 +262,7 @@ func TestAuthWrapperEmptyUsename(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(page(), db)
+	sut := AuthWrapper(testHandler, db)
 
 	sut(w, r)
 
@@ -294,7 +295,7 @@ func TestAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(page(), db)
+	sut := AuthWrapper(testHandler, db)
 
 	sut(w, r)
 

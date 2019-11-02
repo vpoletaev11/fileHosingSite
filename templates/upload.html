@@ -10,9 +10,10 @@
         <a href="/"><h2>Go back</h2></a>
     </div>
 
-    <div class="uploadForm">
-        <form action="" method="post">
-            <p>Filename: <input required type="text" name="filename"></p><br>
+    <div class="uploadFormBox">
+        <div class="uploadFormContent">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <p>Filename: <input type="text" maxlength="50" name="filename"></p><br>
             <p>Input description for uploading file:</p>
             <textarea cols="80" rows="15" maxlength="500" name="description"></textarea>
     
@@ -24,10 +25,10 @@
                 <option value="music">music</option>
                 </select></p>
                    
-            <p><input type="file"></input></p>
+            <p><input required type="file" name="uploaded_file"></input></p>
 
             <input type="submit" value="UPLOAD">
         </form>
-
+        </div>
     </div>
 </body>

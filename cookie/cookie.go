@@ -23,6 +23,8 @@ const (
 	deleteSession = "DELETE FROM sessions WHERE cookie=?"
 )
 
+type page func(db *sql.DB, username string) http.HandlerFunc
+
 // CreateCookie creates cookie for user
 func CreateCookie() http.Cookie {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -77,7 +79,7 @@ func cookieValidator(db *sql.DB, r *http.Request) (string, http.Cookie, error) {
 }
 
 // AuthWrapper grants access to pagehandler and extends cookie lifetime if inputted cookie are valid
-func AuthWrapper(pageHandler http.Handler, db *sql.DB) http.HandlerFunc {
+func AuthWrapper(pageHandler page, db *sql.DB) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// checking cookie validity
 		username, cookie, err := cookieValidator(db, r)
@@ -103,6 +105,7 @@ func AuthWrapper(pageHandler http.Handler, db *sql.DB) http.HandlerFunc {
 		}
 		http.SetCookie(w, &cookie)
 
+		pageHandler := pageHandler(db, username)
 		// run page handler
 		pageHandler.ServeHTTP(w, r)
 	})

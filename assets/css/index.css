@@ -8,9 +8,11 @@ ul.nav{
     padding-left: 0px;
     list-style: none;
 }
+
 .nav li { 
     display: inline; 
 }
+
 ul.nav a {
     display: inline-block;
     width: 150px;
@@ -20,10 +22,6 @@ ul.nav a {
     text-decoration: none;
     color: #333;
     text-align: center;
-}
-ul.nav a:hover{
-    background-color: #333;
-    color: #f4f4f4;
 }
 
 .label{

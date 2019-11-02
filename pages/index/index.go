@@ -11,7 +11,7 @@ import (
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/index.html"
 
 // Page returns HandleFunc with access to MySQL database for index page
-func Page(db *sql.DB) http.HandlerFunc {
+func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page
 		page, err := template.ParseFiles(absPathTemplate)

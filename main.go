@@ -26,6 +26,9 @@ func main() {
 	// creating file server handler for assets
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
+	// creating file server handler for assets
+	http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("files"))))
+
 	// registration page handler
 	http.HandleFunc("/registration", registration.Page(db))
 
@@ -33,14 +36,15 @@ func main() {
 	http.HandleFunc("/login", login.Page(db))
 
 	// index page handler
-	http.HandleFunc("/", cookie.AuthWrapper(index.Page(db), db))
+	http.HandleFunc("/", cookie.AuthWrapper(index.Page, db))
 
 	// logout page handler
 	http.HandleFunc("/logout", logout.Page(db))
 
 	// upload file page handler
-	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page(db), db))
+	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page, db))
 
+	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)
 
 	fmt.Println("starting server at :8080")

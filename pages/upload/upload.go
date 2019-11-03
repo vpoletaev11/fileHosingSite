@@ -11,12 +11,21 @@ import (
 	"time"
 )
 
-const sendFileInfoToDB = "INSERT INTO files (label, description, owner, category, upload_date) VALUES (?, ?, ?, ?, ?);"
+const (
+	// send fileinfo of uploaded file into MySQL database
+	sendFileInfoToDB = "INSERT INTO files (label, filesizeBytes, description, owner, category, upload_date) VALUES (?, ?, ?, ?, ?, ?);"
 
-const deleteFileInfoFromDB = "DELETE FROM files WHERE id = ?"
+	// delete fileinfo of uploaded file into MySQL database
+	deleteFileInfoFromDB = "DELETE FROM files WHERE id = ?"
+)
 
 // absolute path to template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/upload.html"
+
+// TemplateLog contain field with warning message for upload page handler template
+type templateUpload struct {
+	Warning template.HTML
+}
 
 // Page returns HandleFunc with access to MySQL database for upload file page
 func Page(db *sql.DB, username string) http.HandlerFunc {
@@ -24,13 +33,13 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			fmt.Fprintln(w, "INTERNAL ERROR. Page not found")
 			return
 		}
 
 		switch r.Method {
 		case "GET":
-			page.Execute(w, "")
+			page.Execute(w, templateUpload{Warning: ""})
 			return
 		case "POST":
 			filename := r.FormValue("filename")
@@ -48,32 +57,30 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// handling of case when filesize more than 1GB
 			if handler.Size > 1000000000 {
-				fmt.Fprintln(w, "Filesize more than 1GB")
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot bo more than 1GB</h2>"})
 			}
-			// handling of case when in form field filename len(filename) == 0
-			if len(filename) == 0 {
-				fmt.Fprintln(w, "Filename cannot be empty")
-				return
-			}
+
 			// handling of case when in form field filename len(filename) > 50
 			if len(filename) > 50 {
-				fmt.Fprintln(w, "Filename are too long")
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>"})
 				return
 			}
+
 			// if filename field in form is empty will be used original filename
 			if len(filename) == 0 {
 				filename = handler.Filename
 			}
+
 			// handling of case when in form field description len(description) > 500
 			if len(description) > 500 {
-				fmt.Fprintln(w, "description are too long")
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>"})
 				return
 			}
 
 			// sending information about uploaded file to MySQL server
-			_, err = db.Exec(sendFileInfoToDB, filename, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
+			_, err = db.Exec(sendFileInfoToDB, filename, handler.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
 			if err != nil {
-				fmt.Fprintln(w, err)
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
 				return
 			}
 
@@ -81,7 +88,8 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			id := ""
 			err = db.QueryRow("SELECT LAST_INSERT_ID();").Scan(&id)
 			if err != nil {
-				fmt.Fprintln(w, err)
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+
 				_, err := db.Exec(deleteFileInfoFromDB, id)
 				if err != nil {
 					log.Println(err)
@@ -92,7 +100,8 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// creating file on disk with name == id
 			f, err := os.Create("files/" + id)
 			if err != nil {
-				fmt.Fprintln(w, err)
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+
 				_, err := db.Exec(deleteFileInfoFromDB, id)
 				if err != nil {
 					log.Println(err)
@@ -103,13 +112,17 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// writting data to file on disk from uploaded file
 			_, err = io.Copy(f, file)
 			if err != nil {
-				fmt.Fprintln(w, err)
+				page.Execute(w, templateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+
 				_, err := db.Exec(deleteFileInfoFromDB, id)
 				if err != nil {
 					log.Println(err)
 				}
 				return
 			}
+
+			page.Execute(w, templateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>"})
+			return
 		}
 	}
 }

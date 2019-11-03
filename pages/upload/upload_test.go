@@ -95,5 +95,5 @@ func TestPageMissingTemplate(t *testing.T) {
 	bodyBytes, err := ioutil.ReadAll(w.Body)
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
-	assert.Equal(t, "Internal error. Page not found\n", bodyString)
+	assert.Equal(t, "INTERNAL ERROR. Page not found\n", bodyString)
 }

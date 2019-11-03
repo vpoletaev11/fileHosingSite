@@ -12,7 +12,7 @@
 
     <div class="uploadFormBox">
         <div class="uploadFormContent">
-        <form action="/upload" method="post" enctype="multipart/form-data">
+        <form action="" method="post" enctype="multipart/form-data">
             <p>Filename: <input type="text" maxlength="50" name="filename"></p><br>
             <p>Input description for uploading file:</p>
             <textarea cols="80" rows="15" maxlength="500" name="description"></textarea>
@@ -27,7 +27,8 @@
                    
             <p><input required type="file" name="uploaded_file"></input></p>
 
-            <input type="submit" value="UPLOAD">
+            <p><input type="submit" value="UPLOAD"></p>
+            {{ .Warning}}
         </form>
         </div>
     </div>

@@ -6,9 +6,16 @@
     <link rel="stylesheet" href="assets/css/upload.css">
 <head>
 <body bgcolor=#f1ded3>
-    <div class="goback">
-        <a href="/"><h2>Go back</h2></a>
+    <div class="menu">
+        <ul class="nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="#">Categories</a></li>
+            <li><a href="#">Most popular</a></li>
+            <li><a href="#">Users</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
     </div>
+    <div class="username">Welcome, {{ .Username}}</div>
 
     <div class="uploadFormBox">
         <div class="uploadFormContent">

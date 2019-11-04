@@ -24,6 +24,13 @@ ul.nav a {
     text-align: center;
 }
 
+.username {
+    font-size: 150%;
+    float: right;
+    margin-right: 1%;
+    color: green;
+}
+
 .label{
     position: absolute;
     margin-left: 30%;

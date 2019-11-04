@@ -1,4 +1,19 @@
-.goback a { 
+.menu {
+    position: absolute;
+    margin-left: 25%;
+}
+
+ul.nav{
+    margin-left: 0px;
+    padding-left: 0px;
+    list-style: none;
+}
+
+.nav li { 
+    display: inline; 
+}
+
+ul.nav a {
     display: inline-block;
     width: 150px;
     padding:10px;
@@ -9,15 +24,24 @@
     text-align: center;
 }
 
+.username {
+    font-size: 150%;
+    float: right;
+    margin-right: 1%;
+    color: green;
+}
+
 .uploadFormBox {
     position: absolute;
     width: 60%;
     height: 80%;
+    margin-top: 5%;
     margin-left: 20%;
     background-color: #d1c2ba;
 
 }
 
 .uploadFormContent {
+    margin-top: 5%;
     margin-left: 25%;
 }

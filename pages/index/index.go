@@ -3,12 +3,18 @@ package index
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"net/http"
-	"text/template"
 )
 
 // absolute path to template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/index.html"
+
+// TemplateIndex contains fields with warning message and username for login page handler template
+type TemplateIndex struct {
+	Warning  template.HTML
+	Username string
+}
 
 // Page returns HandleFunc with access to MySQL database for index page
 func Page(db *sql.DB, username string) http.HandlerFunc {
@@ -22,7 +28,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		}
 		switch r.Method {
 		case "GET":
-			page.Execute(w, "")
+			page.Execute(w, TemplateIndex{Username: username})
 			return
 		}
 	}

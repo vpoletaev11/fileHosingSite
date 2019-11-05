@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC"
+const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15"
 
 // absolute path to template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/index.html"

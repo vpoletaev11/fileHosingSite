@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS files (
 	description VARCHAR(500) NOT NULL,
 	owner VARCHAR(20) NOT NULL,
 	category VARCHAR(20) NOT NULL,
-	upload_date DATETIME NOT NULL,
+	uploadDate DATETIME NOT NULL,
 	rating INT DEFAULT 0
 );
 

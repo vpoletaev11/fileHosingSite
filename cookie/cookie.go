@@ -111,6 +111,8 @@ func AuthWrapper(pageHandler page, db *sql.DB) http.HandlerFunc {
 	})
 }
 
+// todo: make it stateless.
+
 // SessionsCleaner removes expired sessions from MySQL database.
 func SessionsCleaner(db *sql.DB) {
 	for {

@@ -36,3 +36,12 @@ ul.nav a {
     margin-left: 30%;
     color: green;
 }
+
+.newlyUploadedBox {
+    position: absolute;
+    background-color: #d1c2ba;
+    width: 80%;
+    margin-left: 10%;
+    margin-top: 10%;
+}
+

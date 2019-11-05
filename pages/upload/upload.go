@@ -8,12 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 const (
 	// send fileinfo of uploaded file into MySQL database
-	sendFileInfoToDB = "INSERT INTO files (label, filesizeBytes, description, owner, category, upload_date) VALUES (?, ?, ?, ?, ?, ?);"
+	sendFileInfoToDB = "INSERT INTO files (label, filesizeBytes, description, owner, category, uploadDate) VALUES (?, ?, ?, ?, ?, ?);"
 
 	// delete fileinfo of uploaded file into MySQL database
 	deleteFileInfoFromDB = "DELETE FROM files WHERE id = ?"
@@ -48,8 +49,8 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			category := r.FormValue("category")
 
 			// getting file from upload form
-			r.ParseMultipartForm(5 * 1024 * 1025)
-			file, handler, err := r.FormFile("uploaded_file")
+			r.ParseMultipartForm(5 * 1024 * 1024)
+			file, header, err := r.FormFile("uploaded_file")
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -57,7 +58,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			defer file.Close()
 
 			// handling of case when filesize more than 1GB
-			if handler.Size > 1000000000 {
+			if header.Size > 1024*1024*1024 {
 				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot bo more than 1GB</h2>"})
 			}
 
@@ -69,7 +70,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// if filename field in form is empty will be used original filename
 			if len(filename) == 0 {
-				filename = handler.Filename
+				filename = header.Filename
 			}
 
 			// handling of case when in form field description len(description) > 500
@@ -78,25 +79,21 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 
+			// todo: timezone utc
 			// sending information about uploaded file to MySQL server
-			_, err = db.Exec(sendFileInfoToDB, filename, handler.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
+			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
 			if err != nil {
 				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
 				return
 			}
 
-			// getting id of uploaded file from MySQL server
-			id := ""
-			err = db.QueryRow("SELECT LAST_INSERT_ID();").Scan(&id)
+			// getting id of uploaded file from exec
+			idInt, err := res.LastInsertId()
 			if err != nil {
 				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
-
-				_, err := db.Exec(deleteFileInfoFromDB, id)
-				if err != nil {
-					log.Println(err)
-				}
 				return
 			}
+			id := strconv.FormatInt(idInt, 10)
 
 			// creating file on disk with name == id
 			f, err := os.Create("files/" + id)
@@ -110,6 +107,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 
+			// todo: filesize checking while copying
 			// writting data to file on disk from uploaded file
 			_, err = io.Copy(f, file)
 			if err != nil {

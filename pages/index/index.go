@@ -87,13 +87,13 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				fiDB.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
 
 				if len(fiDB.Label) > 20 {
-					fiTable.Label = fiDB.Label[:20]
+					fiTable.Label = fiDB.Label[:20] + "..."
 				} else {
 					fiTable.Label = fiDB.Label
 				}
 
 				if len(fiDB.Description) > 30 {
-					fiTable.Description = fiDB.Description[:20]
+					fiTable.Description = fiDB.Description[:25] + "..."
 				} else {
 					fiTable.Description = fiDB.Description
 				}

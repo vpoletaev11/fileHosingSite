@@ -1,11 +1,13 @@
 package upload
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -109,7 +111,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// todo: filesize checking while copying
 			// writting data to file on disk from uploaded file
-			_, err = io.Copy(f, file)
+			err = writerToDisk(f, file)
 			if err != nil {
 				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
 
@@ -120,8 +122,34 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 
-			page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>"})
+			page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: username})
 			return
+		}
+	}
+}
+
+func writerToDisk(fDisk io.Writer, fUpload multipart.File) error {
+	buf := bytes.NewBuffer(make([]byte, 0, 1024))
+
+	var writtenTotal int64
+	for {
+		n, err := buf.ReadFrom(fUpload)
+		//_, err := io.Copy(buf, fUpload)
+		if err != nil {
+			return err
+		}
+		if n == 0 {
+			return nil
+		}
+
+		_, err = io.Copy(fDisk, buf)
+		if err != nil {
+			return err
+		}
+		writtenTotal += n
+		if writtenTotal > 1024*1024*1024 {
+			err = fmt.Errorf("Filesize more than 1 GB")
+			return err
 		}
 	}
 }

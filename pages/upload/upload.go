@@ -61,12 +61,13 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// handling of case when filesize more than 1GB
 			if header.Size > 1024*1024*1024 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot bo more than 1GB</h2>"})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot be more than 1GB</h2>", Username: username})
+				return
 			}
 
 			// handling of case when in form field filename len(filename) > 50
 			if len(filename) > 50 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>"})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>", Username: username})
 				return
 			}
 
@@ -77,7 +78,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// handling of case when in form field description len(description) > 500
 			if len(description) > 500 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>"})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>", Username: username})
 				return
 			}
 
@@ -85,35 +86,32 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// sending information about uploaded file to MySQL server
 			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
 			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
 				return
 			}
 
 			// getting id of uploaded file from exec
 			idInt, err := res.LastInsertId()
 			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
 				return
 			}
 			id := strconv.FormatInt(idInt, 10)
 
-			// creating file on disk with name == id
-			f, err := os.Create("files/" + id)
-			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
-
-				_, err := db.Exec(deleteFileInfoFromDB, id)
-				if err != nil {
-					log.Println(err)
-				}
-				return
-			}
-
-			// todo: filesize checking while copying
 			// writting data to file on disk from uploaded file
-			err = writerToDisk(f, file)
+			err = writerToDisk(id, file)
 			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"})
+				if err.Error() == "Filesize more than 1 GB" {
+					page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1 GB</h2>", Username: username})
+
+					_, err := db.Exec(deleteFileInfoFromDB, id)
+					if err != nil {
+						log.Println(err)
+					}
+					return
+				}
+
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
 
 				_, err := db.Exec(deleteFileInfoFromDB, id)
 				if err != nil {
@@ -128,13 +126,20 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 	}
 }
 
-func writerToDisk(fDisk io.Writer, fUpload multipart.File) error {
+// writerToDisk creates file on disk with name == id, and copy data from uploaded file via buffer into file on disk.
+// writerToDisk also check if uploaded file aren't bigger than 1GB, if it true, file on disk will be removed.
+func writerToDisk(id string, fUpload multipart.File) error {
+	// creating file on disk with name == id
+	f, err := os.Create("files/" + id)
+	if err != nil {
+		return err
+	}
+
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 
 	var writtenTotal int64
 	for {
 		n, err := buf.ReadFrom(fUpload)
-		//_, err := io.Copy(buf, fUpload)
 		if err != nil {
 			return err
 		}
@@ -142,12 +147,14 @@ func writerToDisk(fDisk io.Writer, fUpload multipart.File) error {
 			return nil
 		}
 
-		_, err = io.Copy(fDisk, buf)
+		_, err = io.Copy(f, buf)
 		if err != nil {
 			return err
 		}
+		// second filesize checker, for case when file headers are spoofed
 		writtenTotal += n
 		if writtenTotal > 1024*1024*1024 {
+			os.Remove(f.Name())
 			err = fmt.Errorf("Filesize more than 1 GB")
 			return err
 		}

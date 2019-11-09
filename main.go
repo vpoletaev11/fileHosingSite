@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/vpoletaev11/fileHostingSite/cookie"
+	"github.com/vpoletaev11/fileHostingSite/pages/categories"
 	"github.com/vpoletaev11/fileHostingSite/pages/index"
 	"github.com/vpoletaev11/fileHostingSite/pages/login"
 	"github.com/vpoletaev11/fileHostingSite/pages/logout"
@@ -43,6 +44,9 @@ func main() {
 
 	// upload file page handler
 	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page, db))
+
+	// categories page handler
+	http.HandleFunc("/categories", cookie.AuthWrapper(categories.Page, db))
 
 	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)

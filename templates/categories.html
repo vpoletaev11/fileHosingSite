@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Hosting</title>
+    <link rel="stylesheet" href="assets/css/categories.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="menu">
+        <ul class="nav">
+            <li><a href="/upload">Upload file</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="#">Most popular</a></li>
+            <li><a href="#">Users</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </div>
+    <div class="username">Welcome, {{ .Username}}</div>
+
+    <ul class="categoriesList">
+        <li><a href="#" class="categoryLink">Other</a></li>
+        <li><a href="#" class="categoryLink">Games</a></li>
+        <li><a href="#" class="categoryLink">Documents</a></li>
+        <li><a href="#" class="categoryLink">Projects</a></li>
+        <li><a href="#" class="categoryLink">Music</a></li>
+    </ul>
+</body>

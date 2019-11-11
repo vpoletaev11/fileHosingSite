@@ -1,13 +1,10 @@
 package upload
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"io"
-	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,6 +28,26 @@ type TemplateUpload struct {
 	Username string
 }
 
+// PassThru contains reader and total writted on disk bytes
+type PassThru struct {
+	io.Reader
+	total int64 // Total # of bytes transferred
+}
+
+// Read 'overrides' the underlying io.Reader's Read method.
+// This is the one that will be called by io.Copy().
+// This is used while copying to check is the uploaded file size larger than 1GB.
+func (pt *PassThru) Read(p []byte) (int, error) {
+	n, err := pt.Reader.Read(p)
+	pt.total += int64(n)
+
+	if pt.total == 1024*1024*1024 {
+		return 0, fmt.Errorf("File more than 1GB")
+	}
+
+	return n, err
+}
+
 // Page returns HandleFunc with access to MySQL database for upload file page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +68,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			category := r.FormValue("category")
 
 			// getting file from upload form
-			r.ParseMultipartForm(5 * 1024 * 1024)
+			//r.ParseMultipartForm(5 * 1024 * 1024)
 			file, header, err := r.FormFile("uploaded_file")
 			if err != nil {
 				fmt.Println(err)
@@ -99,64 +116,21 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			id := strconv.FormatInt(idInt, 10)
 
 			// writting data to file on disk from uploaded file
-			err = writerToDisk(id, file)
+			f, err := os.Create("files/" + id)
 			if err != nil {
-				if err.Error() == "Filesize more than 1 GB" {
-					page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1 GB</h2>", Username: username})
+				fmt.Println("")
+				return
+			}
 
-					_, err := db.Exec(deleteFileInfoFromDB, id)
-					if err != nil {
-						log.Println(err)
-					}
-					return
-				}
-
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
-
-				_, err := db.Exec(deleteFileInfoFromDB, id)
-				if err != nil {
-					log.Println(err)
-				}
+			_, err = io.Copy(f, &PassThru{Reader: file})
+			if err != nil {
+				os.Remove(f.Name())
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1GB</h2>", Username: username})
 				return
 			}
 
 			page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: username})
 			return
-		}
-	}
-}
-
-// writerToDisk creates file on disk with name == id, and copy data from uploaded file via buffer into file on disk.
-// writerToDisk also check if uploaded file aren't bigger than 1GB, if it true, file on disk will be removed.
-func writerToDisk(id string, fUpload multipart.File) error {
-	// creating file on disk with name == id
-	f, err := os.Create("files/" + id)
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBuffer(make([]byte, 0, 1024))
-
-	var writtenTotal int64
-	for {
-		n, err := buf.ReadFrom(fUpload)
-		if err != nil {
-			return err
-		}
-		if n == 0 {
-			return nil
-		}
-
-		_, err = io.Copy(f, buf)
-		if err != nil {
-			return err
-		}
-		// second filesize checker, for case when file headers are spoofed
-		writtenTotal += n
-		if writtenTotal > 1024*1024*1024 {
-			os.Remove(f.Name())
-			err = fmt.Errorf("Filesize more than 1 GB")
-			return err
 		}
 	}
 }

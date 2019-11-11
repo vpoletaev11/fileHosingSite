@@ -46,7 +46,7 @@ func main() {
 	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page, db))
 
 	// categories page handler
-	http.HandleFunc("/categories", cookie.AuthWrapper(categories.Page, db))
+	http.HandleFunc("/categories/", cookie.AuthWrapper(categories.Page, db))
 
 	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)

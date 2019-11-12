@@ -15,7 +15,9 @@ const absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/
 
 const absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/anyCategory.html"
 
-const selectFileInfo = "SELECT * FROM files where category = ? ORDER BY uploadDate DESC LIMIT 15;"
+const selectFileInfo = "SELECT * FROM files WHERE category = ? ORDER BY uploadDate DESC LIMIT ?, ?;"
+
+const countRows = "SELECT COUNT(*) FROM files WHERE category = ?;"
 
 // TemplateCategories contains fields with warning message and username for login page handler template
 type TemplateCategories struct {
@@ -56,8 +58,74 @@ type fileInfoTable struct {
 	DescriptionComment string
 }
 
-func anyCategoryPage(db *sql.DB, category string) []fileInfoTable {
-	rows, err := db.Query(selectFileInfo, category)
+func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
+	link := r.URL.Path[len("/categories/"):]
+	category := ""
+	switch link {
+
+	case "other":
+		category = "other"
+
+	case "games":
+		category = "games"
+
+	case "documents":
+		category = "documents"
+
+	case "projects":
+		category = "projects"
+
+	case "music":
+
+		category = "music"
+
+	default:
+		http.Redirect(w, r, "/categories/", http.StatusFound)
+	}
+	//
+	//
+	//
+
+	page, err := template.ParseFiles(absPathTemplateAnyCategory)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Internal error. Page not found")
+		return
+	}
+
+	rowsCount := 0
+	db.QueryRow(countRows, category).Scan(&rowsCount)
+	if rowsCount == 0 {
+		page.Execute(w, TemplateAnyCategory{Username: username})
+		return
+	}
+
+	numPageStr := r.URL.Query().Get("p")
+	numPage := 0
+	if numPageStr == "" {
+		numPage = 0
+	} else {
+		numPage, err = strconv.Atoi(numPageStr)
+		if err != nil {
+			http.Redirect(w, r, "/categories/"+category, http.StatusFound)
+			return
+		}
+	}
+
+	pagesCount := rowsCount / 15
+	if pagesCount%15 != 0 {
+		pagesCount++
+	}
+	if pagesCount == 0 {
+		pagesCount++
+	}
+
+	if numPage > pagesCount {
+		fmt.Fprintln(w, "ERROR: Incorrect get request")
+		return
+	}
+
+	rows, err := db.Query(selectFileInfo, category, numPage*15, numPage*15+15)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -110,7 +178,8 @@ func anyCategoryPage(db *sql.DB, category string) []fileInfoTable {
 
 		fiTableCollection = append(fiTableCollection, *fiTable)
 	}
-	return fiTableCollection
+	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
+	return
 }
 
 // Page returns HandleFunc with access to MySQL database for categories page
@@ -125,77 +194,12 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		}
 		switch r.Method {
 		case "GET":
-			link := r.URL.Path[len("/categories/"):]
-			switch link {
-			case "":
+			if r.URL.Path[len("/categories/"):] == "" {
+
 				page.Execute(w, TemplateCategories{Username: username})
 				return
-
-			case "other":
-				pageOther, err := template.ParseFiles(absPathTemplateAnyCategory)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintln(w, "Internal error. Page not found")
-					return
-				}
-
-				fit := anyCategoryPage(db, "other")
-				pageOther.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fit})
-				return
-
-			case "games":
-				pageOther, err := template.ParseFiles(absPathTemplateAnyCategory)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintln(w, "Internal error. Page not found")
-					return
-				}
-
-				fit := anyCategoryPage(db, "games")
-				pageOther.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fit})
-				return
-
-			case "documents":
-				pageOther, err := template.ParseFiles(absPathTemplateAnyCategory)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintln(w, "Internal error. Page not found")
-					return
-				}
-
-				fit := anyCategoryPage(db, "documents")
-				pageOther.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fit})
-				return
-
-			case "projects":
-				pageOther, err := template.ParseFiles(absPathTemplateAnyCategory)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintln(w, "Internal error. Page not found")
-					return
-				}
-
-				fit := anyCategoryPage(db, "projects")
-				pageOther.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fit})
-				return
-
-			case "music":
-				pageOther, err := template.ParseFiles(absPathTemplateAnyCategory)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintln(w, "Internal error. Page not found")
-					return
-				}
-
-				fit := anyCategoryPage(db, "music")
-				pageOther.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fit})
-				return
-
-			default:
-				fmt.Fprintln(w, "Page not found")
-				return
 			}
-
+			anyCategoryPage(db, username, w, r)
 		}
 	}
 }

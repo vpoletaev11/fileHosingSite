@@ -43,3 +43,9 @@ ul.nav a {
     margin-left: 10%;
 }
 
+.pagesNums {
+    position: absolute;
+    margin-left: 30%;
+    margin-top: 40%;
+}
+

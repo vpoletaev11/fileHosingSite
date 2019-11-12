@@ -30,6 +30,7 @@ type TemplateAnyCategory struct {
 	Warning       template.HTML
 	Username      string
 	Title         string
+	LinkList      []numLink
 	UploadedFiles []fileInfoTable
 }
 
@@ -56,6 +57,11 @@ type fileInfoTable struct {
 	LabelComment       string
 	FilesizeMbComment  string
 	DescriptionComment string
+}
+
+type numLink struct {
+	NumPage int
+	Link    string
 }
 
 func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
@@ -178,7 +184,18 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 		fiTableCollection = append(fiTableCollection, *fiTable)
 	}
-	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
+	if pagesCount < 2 {
+		page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
+		return
+	}
+
+	var numsLinks []numLink
+	for i := 0; i != pagesCount; i++ {
+		pageNum := strconv.Itoa(i)
+		link := "/categories/" + category + "?p=" + pageNum
+		numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+	}
+	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
 	return
 }
 
@@ -199,7 +216,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				page.Execute(w, TemplateCategories{Username: username})
 				return
 			}
-			anyCategoryPage(db, username, w, r)
+			anyCategoryPageHandler(db, username, w, r)
 		}
 	}
 }

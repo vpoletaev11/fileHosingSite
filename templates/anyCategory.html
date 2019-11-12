@@ -36,4 +36,10 @@
             </ul>
         </div>
     </div>
+
+    <div class="pagesNums">
+        {{range .LinkList}}
+        <a href={{ .Link}}>{{ .NumPage}}</a>
+        {{ end }}
+    </div>
 </body>

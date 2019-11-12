@@ -27,6 +27,7 @@ ul.nav a {
     transform: scale(1.2);
 }
 
+
 .username {
     font-size: 150%;
     float: right;
@@ -34,31 +35,11 @@ ul.nav a {
     color: green;
 }
 
-.categoriesList {
-    list-style: none;
+.newlyUploadedBox {
     position: absolute;
     margin-top: 5%;
-    margin-left: 29%;
-    width: 35%;
-}
-
-.categoryLink {
-    display: inline-block;
-    width: 100%;
-    font-size: 600%;
-    padding:10px;
     background-color: #d1c2ba;
-    margin-top: 1%;
-    text-decoration: none;
-    color: #333;
-    text-align: center;
+    width: 80%;
+    margin-left: 10%;
 }
 
-.categoriesList li :hover {
-    background-color: #f4f4f4;
-}
-
-.categoriesList li :hover {
-    margin-left: 5%;
-    width: 90%;
-}

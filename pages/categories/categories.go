@@ -122,8 +122,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	pagesCount := rowsCount / 15
-	//pagesCount = 50 /////////////////////////////////////////////////////////////////////
-	if pagesCount%15 != 0 {
+	if rowsCount%15 != 0 {
 		pagesCount++
 	}
 	if pagesCount == 0 {
@@ -194,23 +193,40 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	var numsLinks []numLink
-	// if pagesCount > 10 {
-	// 	link := "/categories/" + category + "?p=" + "0"
-	// 	numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
-	// 	for i := numPage; i != numPage+10; i++ {
-	// 		pageNum := strconv.Itoa(i)
-	// 		link := "/categories/" + category + "?p=" + pageNum
-	// 		numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
-	// 	}
-	// 	link = "/categories/" + category + "?p=" + strconv.Itoa(pagesCount-1)
-	// 	numsLinks = append(numsLinks, numLink{NumPage: pagesCount - 1, Link: link})
-	// } else {
-	for i := 0; i != pagesCount; i++ {
-		pageNum := strconv.Itoa(i + 1)
-		link := "/categories/" + category + "?p=" + pageNum
-		numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+	if pagesCount > 25 {
+		link := "/categories/" + category + "?p=" + "1"
+		numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
+		if numPage < 10 {
+			for i := 2; i <= 25; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
+			}
+
+		} else if numPage > pagesCount-15 {
+			for i := numPage - 5; i <= pagesCount-2; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+			}
+
+		} else {
+			for i := numPage - 5; i < numPage+20; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+			}
+		}
+		link = "/categories/" + category + "?p=" + strconv.Itoa(pagesCount)
+		numsLinks = append(numsLinks, numLink{NumPage: pagesCount, Link: link})
+
+	} else {
+		for i := 0; i != pagesCount; i++ {
+			pageNum := strconv.Itoa(i + 1)
+			link := "/categories/" + category + "?p=" + pageNum
+			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+		}
 	}
-	// }
 	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
 	return
 }

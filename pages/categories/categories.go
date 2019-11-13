@@ -109,7 +109,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	numPageStr := r.URL.Query().Get("p")
 	numPage := 0
 	if numPageStr == "" {
-		numPage = 0
+		numPage = 1
 	} else {
 		numPage, err = strconv.Atoi(numPageStr)
 		if err != nil {
@@ -117,8 +117,12 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 			return
 		}
 	}
+	if numPage == 0 {
+		numPage++
+	}
 
 	pagesCount := rowsCount / 15
+	//pagesCount = 50 /////////////////////////////////////////////////////////////////////
 	if pagesCount%15 != 0 {
 		pagesCount++
 	}
@@ -131,7 +135,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		return
 	}
 
-	rows, err := db.Query(selectFileInfo, category, numPage*15, numPage*15+15)
+	rows, err := db.Query(selectFileInfo, category, (numPage-1)*15, numPage*15)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -184,17 +188,29 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 		fiTableCollection = append(fiTableCollection, *fiTable)
 	}
-	if pagesCount < 2 {
+	if pagesCount == 1 {
 		page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
 		return
 	}
 
 	var numsLinks []numLink
+	// if pagesCount > 10 {
+	// 	link := "/categories/" + category + "?p=" + "0"
+	// 	numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
+	// 	for i := numPage; i != numPage+10; i++ {
+	// 		pageNum := strconv.Itoa(i)
+	// 		link := "/categories/" + category + "?p=" + pageNum
+	// 		numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+	// 	}
+	// 	link = "/categories/" + category + "?p=" + strconv.Itoa(pagesCount-1)
+	// 	numsLinks = append(numsLinks, numLink{NumPage: pagesCount - 1, Link: link})
+	// } else {
 	for i := 0; i != pagesCount; i++ {
-		pageNum := strconv.Itoa(i)
+		pageNum := strconv.Itoa(i + 1)
 		link := "/categories/" + category + "?p=" + pageNum
 		numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
 	}
+	// }
 	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
 	return
 }

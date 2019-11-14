@@ -17,3 +17,18 @@
         </ul>
     </div>
     <div class="username">Welcome, {{ .Username}}</div>
+
+    <div class="fileInfo">
+        <div class="filename"><h2>Filename: {{ .FileInfo.Label}}</h2></div>
+        <div class="filesize"><h2>Filesize: {{ .FileInfo.FilesizeMB}}</h2></div>
+        <div class="description"><h2>Description: {{ .FileInfo.Description}}</h2></div>
+        <div class="owner"><h2>Owner: {{ .FileInfo.Owner}}</h2></div>
+        <div class="category"><h2>Category: {{ .FileInfo.Category}}</h2></div>
+        <div class="uploadDate"><h2>Upload date: {{ .FileInfo.UploadDate}}</h2></div>
+        <div class="rating"><h2>Rating: {{ .FileInfo.Rating}}</h2></div>
+    </div>
+
+    <div class="setRating"></div>
+    <div class="download"></div>
+
+</body>

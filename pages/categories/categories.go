@@ -46,13 +46,14 @@ type fileInfoDB struct {
 }
 
 type fileInfoTable struct {
-	Label       string
-	FilesizeMb  string
-	Description string
-	Owner       string
-	Category    string
-	UploadDate  string
-	Rating      int
+	Label        string
+	DownloadLink string
+	FilesizeMb   string
+	Description  string
+	Owner        string
+	Category     string
+	UploadDate   string
+	Rating       int
 	//
 	LabelComment       string
 	FilesizeMbComment  string
@@ -174,6 +175,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 			fiTable.Description = fiDB.Description
 		}
 
+		fiTable.DownloadLink = "/download?id=" + strconv.Itoa(fiDB.ID)
 		fiTable.FilesizeMb = fmt.Sprintf("%.4f", float64(fiDB.FilesizeBytes)/1024/1024) + " MB"
 
 		fiTable.Owner = fiDB.Owner

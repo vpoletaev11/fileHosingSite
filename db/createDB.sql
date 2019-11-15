@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS files (
 );
 
 CREATE TABLE IF NOT EXISTS filesRating (
+	PRIMARY KEY(fileID, voter),
 	fileID INT NOT NULL,
 	voter VARCHAR(20) NOT NULL,
 	rating SMALLINT

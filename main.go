@@ -12,6 +12,7 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/pages/index"
 	"github.com/vpoletaev11/fileHostingSite/pages/login"
 	"github.com/vpoletaev11/fileHostingSite/pages/logout"
+	"github.com/vpoletaev11/fileHostingSite/pages/popular"
 	"github.com/vpoletaev11/fileHostingSite/pages/registration"
 	"github.com/vpoletaev11/fileHostingSite/pages/upload"
 )
@@ -51,6 +52,9 @@ func main() {
 
 	// download page handler
 	http.HandleFunc("/download", cookie.AuthWrapper(download.Page, db))
+
+	// popular page handler
+	http.HandleFunc("/popular", cookie.AuthWrapper(popular.Page, db))
 
 	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)

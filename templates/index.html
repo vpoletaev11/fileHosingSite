@@ -27,7 +27,7 @@
                 {{range .UploadedFiles}}
                     <table border="1" width="100%" cellpadding="5">
                         <tr>
-                            <td width="15%" title={{ .LabelComment}}>{{ .Label}}</td>
+                            <td width="15%" title={{ .LabelComment}}><a href={{ .Link}}>{{ .Label}}</a></td>
                             <td width="10%" title={{ .FilesizeMbComment}}>{{ .FilesizeMb}}</td>
                             <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
                             <td width="15%">{{ .Owner}}</td>

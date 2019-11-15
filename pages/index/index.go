@@ -35,6 +35,7 @@ type fileInfoDB struct {
 
 type fileInfoTable struct {
 	Label       string
+	Link        template.HTML
 	FilesizeMb  string
 	Description string
 	Owner       string
@@ -98,6 +99,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 					fiTable.Description = fiDB.Description
 				}
 
+				fiTable.Link = template.HTML("/download?id=" + strconv.Itoa(fiDB.ID))
 				fiTable.FilesizeMb = fmt.Sprintf("%.4f", float64(fiDB.FilesizeBytes)/1024/1024) + " MB"
 
 				fiTable.Owner = fiDB.Owner

@@ -8,7 +8,7 @@
 <body bgcolor=#f1ded3>
     <div class="menu">
         <ul class="nav">
-            <li><a href="/index">Home</a></li>
+            <li><a href="/">Home</a></li>
             <li><a href="/upload">Upload file</a></li>
             <li><a href="/categories">Categories</a></li>
             <li><a href="#">Most popular</a></li>
@@ -26,9 +26,38 @@
         <div class="category"><h2>Category: {{ .FileInfo.Category}}</h2></div>
         <div class="uploadDate"><h2>Upload date: {{ .FileInfo.UploadDate}}</h2></div>
         <div class="rating"><h2>Rating: {{ .FileInfo.Rating}}</h2></div>
+
+        <div class="setRating">
+            <form  action="" method="post">
+                    Set rating:
+                            <select name="rating">
+                                <option value="-10">-10</option>
+                                <option value="-9">-9</option>
+                                <option value="-8">-8</option>
+                                <option value="-7">-7</option>
+                                <option value="-6">-6</option>
+                                <option value="-5">-5</option>
+                                <option value="-4">-4</option>
+                                <option value="-3">-3</option>
+                                <option value="-2">-2</option>
+                                <option value="-1">-1</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                <input type="submit" value="VOTE">
+            </form>
+        </div>
+
+        <div class="download">
+            <a href="{{ .FileInfo.DownloadLink}}" download=><h1>download</h1></a>
+        </div>
     </div>
-
-    <div class="setRating"></div>
-    <div class="download"></div>
-
 </body>

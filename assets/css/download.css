@@ -36,7 +36,7 @@ ul.nav a {
 
 .fileInfo {
     position: absolute;
-    margin-top: 10%;
+    margin-top: 5%;
     margin-left: 30%;
     width: 40%;
     background-color: #d1c2ba;
@@ -45,4 +45,12 @@ ul.nav a {
 .description {
     width: 100%;
     word-wrap: break-word;
+}
+
+.setRating {
+    margin-top: 5%;
+}
+
+.download {
+    text-align: center;
 }

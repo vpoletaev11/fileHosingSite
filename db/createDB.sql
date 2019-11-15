@@ -26,4 +26,9 @@ CREATE TABLE IF NOT EXISTS files (
 	rating INT DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS filesRating (
+	fileID INT NOT NULL,
+	voter VARCHAR(20) NOT NULL,
+	rating SMALLINT
+);
 

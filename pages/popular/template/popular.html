@@ -16,8 +16,27 @@
         </ul>
     </div>
     <div class="username">Welcome, {{ .Username}}</div>
+    
     <div class="label">
         <br><br><br><br><br>
         <p><h1>↓↓↓ MOST POPULAR FILES ↓↓↓</h1></p>
     </div>
+
+    <div class = "newlyUploadedBox">
+        <div class = "newlyUploadedContent">
+                {{range .UploadedFiles}}
+                    <table border="1" width="100%" cellpadding="5">
+                        <tr>
+                            <td width="15%" title={{ .LabelComment}}><a href={{ .Link}}>{{ .Label}}</a></td>
+                            <td width="10%" title={{ .FilesizeMbComment}}>{{ .FilesizeMb}}</td>
+                            <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
+                            <td width="15%">{{ .Owner}}</td>
+                            <td width="10%">{{ .Category}}</td>
+                            <td width="15%">{{ .UploadDate}}</td>
+                            <td width="10%">{{ .Rating}}</td>
+                        </tr>
+                    </table>
+                {{ end }}
+            </ul>
+        </div>
 </body>

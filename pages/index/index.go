@@ -13,7 +13,7 @@ import (
 const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15;"
 
 // absolute path to template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/index.html"
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/index/template/index.html"
 
 // TemplateIndex contains fields with warning message and username for index page handler template
 type TemplateIndex struct {

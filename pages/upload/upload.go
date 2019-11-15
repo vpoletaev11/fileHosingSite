@@ -20,7 +20,7 @@ const (
 )
 
 // absolute path to template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/upload.html"
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/upload/template/upload.html"
 
 // TemplateUpload contains fields with warning message and username for login page handler template
 type TemplateUpload struct {

@@ -11,7 +11,7 @@ import (
 )
 
 // absolute path to template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/download.html"
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/download/template/download.html"
 
 const fileInfoDB = "SELECT * FROM files WHERE id = ?;"
 

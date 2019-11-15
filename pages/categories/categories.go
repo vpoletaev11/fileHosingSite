@@ -11,9 +11,9 @@ import (
 )
 
 // absolute path to template file
-const absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/categories.html"
+const absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/categories.html"
 
-const absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/anyCategory.html"
+const absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/anyCategory.html"
 
 const selectFileInfo = "SELECT * FROM files WHERE category = ? ORDER BY uploadDate DESC LIMIT ?, ?;"
 

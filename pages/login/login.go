@@ -19,7 +19,7 @@ const (
 	insertCookie = "INSERT INTO sessions (username, cookie, expires) VALUES(?, ?, ?);"
 
 	// absolute path to template file
-	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/login.html"
+	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/login/template/login.html"
 )
 
 // TemplateLog contain field with warning message for login page handler template

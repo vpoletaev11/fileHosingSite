@@ -14,7 +14,7 @@ import (
 const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
 
 // absolute path to template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/templates/register.html"
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/registration/template/register.html"
 
 // TemplateReg contain field with warning message for registration page handler template
 type TemplateReg struct {

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Hosting</title>
+    <link rel="stylesheet" href="assets/css/users.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="menu">
+        <ul class="nav">
+            <li><a href="/upload">Upload file</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/popular">Most popular</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </div>
+    <div class="username">Welcome, {{ .Username}}</div>
+
+    <div class="label">
+        <br><br><br><br><br>
+        <p><h1>↓↓↓ TOP UPLOADERS ↓↓↓</h1></p>
+    </div>
+
+    <div class = "userList">
+                {{range .UserList}}
+                    <table border="1" width="100%" cellpadding="5">
+                        <tr>
+                            <td width="70%">{{ .Username}}</td>
+                            <td width="30%">{{ .Rating}}</td>
+                        </tr>
+                    </table>
+                {{ end }}
+            </ul>
+    </div>
+</body>

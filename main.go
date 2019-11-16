@@ -15,6 +15,7 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/pages/popular"
 	"github.com/vpoletaev11/fileHostingSite/pages/registration"
 	"github.com/vpoletaev11/fileHostingSite/pages/upload"
+	"github.com/vpoletaev11/fileHostingSite/pages/users"
 )
 
 func main() {
@@ -55,6 +56,9 @@ func main() {
 
 	// popular page handler
 	http.HandleFunc("/popular", cookie.AuthWrapper(popular.Page, db))
+
+	// users page handler
+	http.HandleFunc("/users", cookie.AuthWrapper(users.Page, db))
 
 	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)

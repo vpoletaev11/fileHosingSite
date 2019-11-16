@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const selectUsers = "SELECT username FROM users LIMIT 15;"
+const selectUsers = "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15;"
 
 // absolute path to template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/users/template/users.html"
@@ -49,7 +49,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 				err := rows.Scan(
 					&ui.Username,
-					//&ui.Rating,
+					&ui.Rating,
 				)
 				if err != nil {
 					log.Fatal(err)

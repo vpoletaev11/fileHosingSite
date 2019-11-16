@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -88,12 +89,12 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			}
 
 			id := r.RequestURI[len("/download?id="):]
+
 			_, err = db.Exec("INSERT INTO filesRating (fileID, voter, rating) VALUES (?, ?, ?);", id, username, rating)
 			if err != nil {
 				if strings.Contains(err.Error(), "Error 1062") {
 					var oldRating int
 					err := db.QueryRow("SELECT rating FROM filesRating WHERE fileID = ?;", id).Scan(&oldRating)
-					fmt.Println(oldRating, rating)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -114,6 +115,12 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 						fmt.Println(err)
 						return
 					}
+
+					_, err = db.Exec("UPDATE users SET rating= rating -?  + ?  WHERE username= ?;", oldRating, rating, username)
+					if err != nil {
+						log.Fatal(err)
+					}
+
 					http.Redirect(w, r, r.RequestURI, 302)
 					return
 				}
@@ -124,6 +131,16 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			if err != nil {
 				fmt.Println(err)
 				return
+			}
+
+			username := ""
+			err = db.QueryRow("SELECT owner FROM files WHERE id= ?", id).Scan(&username)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = db.Exec("UPDATE users SET rating= rating + ?  WHERE username= ?;", rating, username)
+			if err != nil {
+				log.Fatal(err)
 			}
 
 			http.Redirect(w, r, r.RequestURI, 302)

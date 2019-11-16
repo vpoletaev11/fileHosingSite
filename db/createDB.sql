@@ -5,7 +5,8 @@ USE fileHostingSite;
 CREATE TABLE IF NOT EXISTS users (
 	PRIMARY KEY(username),
 	username VARCHAR(20) NOT NULL,
-	password VARCHAR(60) NOT NULL
+	password VARCHAR(60) NOT NULL,
+	rating INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS sessions (

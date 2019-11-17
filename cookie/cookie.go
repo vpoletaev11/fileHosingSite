@@ -38,6 +38,7 @@ func CreateCookie() http.Cookie {
 	// creating cookie with lifetime
 	cookie := http.Cookie{
 		Name:    "session_id",
+		Path:    "/",
 		Value:   string(cookieVal),
 		Expires: time.Now().Add(30 * time.Minute),
 	}
@@ -97,6 +98,7 @@ func AuthWrapper(pageHandler page, db *sql.DB) http.HandlerFunc {
 
 		// extending cookie lifetime
 		cookie.Expires = time.Now().Add(30 * time.Minute)
+		cookie.Path = "/"
 		_, err = db.Exec(updateExpires, time.Now().Add(30*time.Minute).Format("2006-01-02 15:04:05"), cookie.Value)
 		if err != nil {
 			w.WriteHeader(500)

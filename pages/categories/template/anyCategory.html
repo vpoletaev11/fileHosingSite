@@ -19,9 +19,17 @@
 
 
     <div class = "newlyUploadedBox">
-        <div class = "newlyUploadedContent">
-                {{range .UploadedFiles}}
                     <table border="1" width="100%" cellpadding="5">
+                        <tr>
+                            <th>Filename</th>
+                            <th>Filesize</th>
+                            <th>Description</th>
+                            <th>Owner</th>
+                            <th>Category</th>
+                            <th>Upload date</th>
+                            <th>Rating</th>
+                        </tr>
+                        {{range .UploadedFiles}}
                         <tr>
                             <td width="15%" title={{ .LabelComment}}><a href={{ .DownloadLink}}>{{ .Label}}</a></td>
                             <td width="10%" title={{ .FilesizeMbComment}}>{{ .FilesizeMb}}</td>
@@ -31,9 +39,8 @@
                             <td width="15%">{{ .UploadDate}}</td>
                             <td width="10%">{{ .Rating}}</td>
                         </tr>
+                        {{ end }}
                     </table>
-                {{ end }}
-            </ul>
         </div>
     </div>
 

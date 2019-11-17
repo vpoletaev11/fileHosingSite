@@ -23,20 +23,27 @@
     </div>
 
     <div class = "newlyUploadedBox">
-        <div class = "newlyUploadedContent">
+        <table border="1" width="100%" cellpadding="5">
+                <tr>
+                    <th>Filename</th>
+                    <th>Filesize</th>
+                    <th>Description</th>
+                    <th>Owner</th>
+                    <th>Category</th>
+                    <th>Upload date</th>
+                    <th>Rating</th>
+                </tr>
                 {{range .UploadedFiles}}
-                    <table border="1" width="100%" cellpadding="5">
-                        <tr>
-                            <td width="15%" title={{ .LabelComment}}><a href={{ .Link}}>{{ .Label}}</a></td>
-                            <td width="10%" title={{ .FilesizeMbComment}}>{{ .FilesizeMb}}</td>
-                            <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
-                            <td width="15%">{{ .Owner}}</td>
-                            <td width="10%">{{ .Category}}</td>
-                            <td width="15%">{{ .UploadDate}}</td>
-                            <td width="10%">{{ .Rating}}</td>
-                        </tr>
-                    </table>
+                <tr>
+                    <td width="15%" title={{ .LabelComment}}><a href={{ .Link}}>{{ .Label}}</a></td>
+                    <td width="10%" title={{ .FilesizeMbComment}}>{{ .FilesizeMb}}</td>
+                    <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
+                    <td width="15%">{{ .Owner}}</td>
+                    <td width="10%">{{ .Category}}</td>
+                    <td width="15%">{{ .UploadDate}}</td>
+                    <td width="10%">{{ .Rating}}</td>
+                </tr>
                 {{ end }}
-            </ul>
-        </div>
+        </table>
+    </div>
 </body>

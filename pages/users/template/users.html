@@ -23,14 +23,17 @@
     </div>
 
     <div class = "userList">
-                {{range .UserList}}
-                    <table border="1" width="100%" cellpadding="5">
-                        <tr>
-                            <td width="70%">{{ .Username}}</td>
-                            <td width="30%">{{ .Rating}}</td>
-                        </tr>
-                    </table>
-                {{ end }}
-            </ul>
+        <table border="1" width="100%" cellpadding="5">
+            <tr>
+                <th>Username</th>
+                <th>User rating</th>
+            </tr>
+            {{range .UserList}}
+            <tr>
+                <td width="70%">{{ .Username}}</td>
+                <td width="30%">{{ .Rating}}</td>
+            </tr>
+            {{ end }}
+        </table>
     </div>
 </body>

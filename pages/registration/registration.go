@@ -2,11 +2,11 @@ package registration
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
 
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,8 +27,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 		// creating template for register page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("registration", "Page", "", err, w)
 			return
 		}
 
@@ -36,7 +35,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 		case "GET":
 			// handling GET requests and response to them is registration page
 			templateData := TemplateReg{""}
-			page.Execute(w, templateData)
+			err := page.Execute(w, templateData)
+			if err != nil {
+				errhand.InternalError("registration", "Page", "", err, w)
+				return
+			}
 			return
 
 		case "POST":
@@ -48,56 +51,88 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// handle case when len(username) == 0
 			if len(username) == 0 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be empty</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password1) == 0
 			if len(password1) == 0 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password2) == 0
 			if len(password2) == 0 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(username) > 20
 			if len(username) > 20 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password1) > 20
 			if len(password1) > 20 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password2) > 20
 			if len(password2) > 20 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handling case when username is non-lowercase
 			if username != strings.ToLower(username) {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Please use lower case username</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handling case when passwords doesn't match
 			if password1 != password2 {
 				templateData := TemplateReg{"<h2 style=\"color:red\">Passwords doesn't match</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
@@ -105,7 +140,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 			hashedPass, err := hashAndSalt(password1)
 			if err != nil {
 				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
@@ -116,12 +155,20 @@ func Page(db *sql.DB) http.HandlerFunc {
 				// handling case when username is not unique
 				if strings.Contains(err.Error(), "Error 1062") {
 					templateData := TemplateReg{"<h2 style=\"color:red\">Username already used</h2>"}
-					page.Execute(w, templateData)
+					err := page.Execute(w, templateData)
+					if err != nil {
+						errhand.InternalError("registration", "Page", "", err, w)
+						return
+					}
 					return
 				}
 				// handling internal errors related with query to MySQL database
 				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)

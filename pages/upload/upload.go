@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 const (
@@ -53,14 +55,17 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "INTERNAL ERROR. Page not found")
+			errhand.InternalError("upload", "Page", username, err, w)
 			return
 		}
 
 		switch r.Method {
 		case "GET":
-			page.Execute(w, TemplateUpload{Username: username})
+			err := page.Execute(w, TemplateUpload{Username: username})
+			if err != nil {
+				errhand.InternalError("upload", "Page", username, err, w)
+				return
+			}
 			return
 		case "POST":
 			filename := r.FormValue("filename")
@@ -71,20 +76,28 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			//r.ParseMultipartForm(5 * 1024 * 1024)
 			file, header, err := r.FormFile("uploaded_file")
 			if err != nil {
-				fmt.Println(err)
+				errhand.InternalError("upload", "Page", username, err, w)
 				return
 			}
 			defer file.Close()
 
 			// handling of case when filesize more than 1GB
 			if header.Size > 1024*1024*1024 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot be more than 1GB</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot be more than 1GB</h2>", Username: username})
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				return
 			}
 
 			// handling of case when in form field filename len(filename) > 50
 			if len(filename) > 50 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>", Username: username})
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				return
 			}
 
@@ -95,7 +108,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// handling of case when in form field description len(description) > 500
 			if len(description) > 500 {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>", Username: username})
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				return
 			}
 
@@ -118,7 +135,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// writting data to file on disk from uploaded file
 			f, err := os.Create("files/" + id)
 			if err != nil {
-				fmt.Println("")
+				errhand.InternalError("upload", "Page", username, err, w)
 				return
 			}
 
@@ -129,7 +146,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 
-			page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: username})
+			err = page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: username})
+			if err != nil {
+				errhand.InternalError("upload", "Page", username, err, w)
+				return
+			}
 			return
 		}
 	}

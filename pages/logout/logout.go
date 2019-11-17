@@ -2,8 +2,9 @@ package logout
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 // query to MySQL database to DELETE session
@@ -20,8 +21,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 		_, err = db.Exec(deleteSession, cookie.Value)
 		if err != nil {
-			fmt.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			errhand.InternalError("logout", "Page", "", err, w)
 			return
 		}
 

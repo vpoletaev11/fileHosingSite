@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 // absolute path to template file
@@ -95,16 +96,22 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 	page, err := template.ParseFiles(absPathTemplateAnyCategory)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Internal error. Page not found")
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
 	}
 
 	rowsCount := 0
-	db.QueryRow(countRows, category).Scan(&rowsCount)
-	if rowsCount == 0 {
-		page.Execute(w, TemplateAnyCategory{Username: username})
+	err = db.QueryRow(countRows, category).Scan(&rowsCount)
+	if err != nil {
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
+	}
+	if rowsCount == 0 {
+		err = page.Execute(w, TemplateAnyCategory{Username: username})
+		if err != nil {
+			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+			return
+		}
 	}
 
 	numPageStr := r.URL.Query().Get("p")
@@ -137,7 +144,8 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 	rows, err := db.Query(selectFileInfo, category, (numPage-1)*15, numPage*15)
 	if err != nil {
-		log.Fatal(err)
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		return
 	}
 	defer rows.Close()
 
@@ -159,7 +167,8 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 			&fiDB.Rating,
 		)
 		if err != nil {
-			log.Fatal(err)
+			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+			return
 		}
 		fiDB.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
 
@@ -190,7 +199,10 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		fiTableCollection = append(fiTableCollection, *fiTable)
 	}
 	if pagesCount == 1 {
-		page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
+		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
+		if err != nil {
+			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		}
 		return
 	}
 
@@ -229,7 +241,11 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
 		}
 	}
-	page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
+	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
+	if err != nil {
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		return
+	}
 	return
 }
 
@@ -239,15 +255,16 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		// creating template for categories page
 		page, err := template.ParseFiles(absPathTemplateCategories)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("categories", "Page", username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			if r.URL.Path[len("/categories/"):] == "" {
-
-				page.Execute(w, TemplateCategories{Username: username})
+				err := page.Execute(w, TemplateCategories{Username: username})
+				if err != nil {
+					errhand.InternalError("categories", "Page", username, err, w)
+				}
 				return
 			}
 			anyCategoryPageHandler(db, username, w, r)

@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15;"
@@ -54,15 +55,15 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		// creating template for index page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("index", "Page", username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			rows, err := db.Query(selectFileInfo)
 			if err != nil {
-				log.Fatal(err)
+				errhand.InternalError("index", "Page", username, err, w)
+				return
 			}
 			defer rows.Close()
 
@@ -83,7 +84,8 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 					&fiDB.Rating,
 				)
 				if err != nil {
-					log.Fatal(err)
+					errhand.InternalError("index", "Page", username, err, w)
+					return
 				}
 				fiDB.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
 
@@ -114,7 +116,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				fiTableCollection = append(fiTableCollection, *fiTable)
 			}
 
-			page.Execute(w, TemplateIndex{Username: username, UploadedFiles: fiTableCollection})
+			err = page.Execute(w, TemplateIndex{Username: username, UploadedFiles: fiTableCollection})
+			if err != nil {
+				errhand.InternalError("index", "Page", username, err, w)
+				return
+			}
 			return
 		}
 	}

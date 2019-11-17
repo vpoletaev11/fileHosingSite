@@ -2,10 +2,10 @@ package users
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
-	"log"
 	"net/http"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 const selectUsers = "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15;"
@@ -31,15 +31,15 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		// creating template for index page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("users", "Page", username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			rows, err := db.Query(selectUsers)
 			if err != nil {
-				log.Fatal(err)
+				errhand.InternalError("users", "Page", username, err, w)
+				return
 			}
 			defer rows.Close()
 
@@ -52,12 +52,17 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 					&ui.Rating,
 				)
 				if err != nil {
-					log.Fatal(err)
+					errhand.InternalError("users", "Page", username, err, w)
+					return
 				}
 				usersInfo = append(usersInfo, ui)
 			}
 
-			page.Execute(w, TemplateUsers{Username: username, UserList: usersInfo})
+			err = page.Execute(w, TemplateUsers{Username: username, UserList: usersInfo})
+			if err != nil {
+				errhand.InternalError("users", "Page", username, err, w)
+				return
+			}
 			return
 		}
 	}

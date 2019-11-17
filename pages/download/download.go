@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 // absolute path to template file
@@ -39,8 +41,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		// creating template for categories page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("download", "Page", username, err, w)
 			return
 		}
 		switch r.Method {
@@ -62,14 +63,18 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				&fi.Rating,
 			)
 			if err != nil {
-				fmt.Fprintln(w, "Internal error. Page not found")
+				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
 			fi.DownloadLink = "/files/" + strconv.Itoa(id)
 			fi.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
 			fi.FilesizeMB = fmt.Sprintf("%.6f", float64(filesizeBytes)/1024/1024) + " MB"
 
-			page.Execute(w, TemplateDownload{Username: username, FileInfo: fi})
+			err = page.Execute(w, TemplateDownload{Username: username, FileInfo: fi})
+			if err != nil {
+				errhand.InternalError("download", "Page", username, err, w)
+				return
+			}
 			return
 
 		case "POST":
@@ -124,23 +129,26 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 					http.Redirect(w, r, r.RequestURI, 302)
 					return
 				}
-				fmt.Println(err)
+
+				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
 			_, err = db.Exec("UPDATE files SET rating=(rating+?) WHERE id=?;", rating, id)
 			if err != nil {
-				fmt.Println(err)
+				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
 
 			username := ""
 			err = db.QueryRow("SELECT owner FROM files WHERE id= ?", id).Scan(&username)
 			if err != nil {
-				log.Fatal(err)
+				errhand.InternalError("download", "Page", username, err, w)
+				return
 			}
 			_, err = db.Exec("UPDATE users SET rating= rating + ?  WHERE username= ?;", rating, username)
 			if err != nil {
-				log.Fatal(err)
+				errhand.InternalError("download", "Page", username, err, w)
+				return
 			}
 
 			http.Redirect(w, r, r.RequestURI, 302)

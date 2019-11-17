@@ -2,12 +2,12 @@ package login
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
 
 	"github.com/vpoletaev11/fileHostingSite/cookie"
+	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,15 +33,18 @@ func Page(db *sql.DB) http.HandlerFunc {
 		// creating template for login page
 		page, err := template.ParseFiles(absPathTemplate)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, "Internal error. Page not found")
+			errhand.InternalError("login", "Page", "", err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			// handling GET requests and response to them is login page
 			templateData := TemplateLog{Warning: ""}
-			page.Execute(w, templateData)
+			err := page.Execute(w, templateData)
+			if err != nil {
+				errhand.InternalError("login", "Page", "", err, w)
+				return
+			}
 			return
 		case "POST":
 			// getting username and password from POST request
@@ -51,35 +54,55 @@ func Page(db *sql.DB) http.HandlerFunc {
 			//handle case when len(username) == 0
 			if username == "" {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be empty</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("login", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password) == 0
 			if password == "" {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be empty</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("login", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(username) > 20
 			if len(username) > 20 {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("login", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when len(password) > 20
 			if len(password) > 20 {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("login", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handling case when username is non-lowercase
 			if username != strings.ToLower(username) {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Please use lower case username</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("login", "Page", "", err, w)
+					return
+				}
 				return
 			}
 

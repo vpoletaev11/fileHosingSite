@@ -6,8 +6,8 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/database"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
@@ -37,35 +37,7 @@ type TemplateAnyCategory struct {
 	Username      string
 	Title         string
 	LinkList      []numLink
-	UploadedFiles []fileInfoTable
-}
-
-// fileInfoDB contains file info getted from MySQL database
-type fileInfoDB struct {
-	ID            int
-	Label         string
-	FilesizeBytes int
-	Description   string
-	Owner         string
-	Category      string
-	UploadDate    string
-	Rating        int
-}
-
-// fileInfoTable contains processed file info from fileInfoDB{}
-type fileInfoTable struct {
-	Label        string
-	DownloadLink string
-	FilesizeMb   string
-	Description  string
-	Owner        string
-	Category     string
-	UploadDate   string
-	Rating       int
-	//
-	LabelComment       string
-	FilesizeMbComment  string
-	DescriptionComment string
+	UploadedFiles []database.FileInfo
 }
 
 // numLink contains relations of page number and page link
@@ -158,59 +130,17 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 	defer rows.Close()
 
-	var uploadDateTime time.Time
+	fiCollection, err := database.FormatedFilesInfo(rows)
+	if err != nil {
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		return
+	}
 
-	var fiTableCollection []fileInfoTable
-	for rows.Next() {
-		fiDB := new(fileInfoDB)
-		fiTable := new(fileInfoTable)
-
-		err := rows.Scan(
-			&fiDB.ID,
-			&fiDB.Label,
-			&fiDB.FilesizeBytes,
-			&fiDB.Description,
-			&fiDB.Owner,
-			&fiDB.Category,
-			&uploadDateTime,
-			&fiDB.Rating,
-		)
+	if pagesCount == 1 {
+		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection})
 		if err != nil {
 			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 			return
-		}
-		fiDB.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
-
-		if len(fiDB.Label) > 20 {
-			fiTable.Label = fiDB.Label[:20] + "..."
-		} else {
-			fiTable.Label = fiDB.Label
-		}
-
-		if len(fiDB.Description) > 30 {
-			fiTable.Description = fiDB.Description[:25] + "..."
-		} else {
-			fiTable.Description = fiDB.Description
-		}
-
-		fiTable.DownloadLink = "/download?id=" + strconv.Itoa(fiDB.ID)
-		fiTable.FilesizeMb = fmt.Sprintf("%.4f", float64(fiDB.FilesizeBytes)/1024/1024) + " MB"
-
-		fiTable.Owner = fiDB.Owner
-		fiTable.Category = fiDB.Category
-		fiTable.UploadDate = fiDB.UploadDate
-		fiTable.Rating = fiDB.Rating
-
-		fiTable.LabelComment = fiDB.Label
-		fiTable.DescriptionComment = fiDB.Description
-		fiTable.FilesizeMbComment = strconv.Itoa(fiDB.FilesizeBytes) + " Bytes"
-
-		fiTableCollection = append(fiTableCollection, *fiTable)
-	}
-	if pagesCount == 1 {
-		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection})
-		if err != nil {
-			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		}
 		return
 	}
@@ -250,7 +180,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
 		}
 	}
-	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiTableCollection, LinkList: numsLinks})
+	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, LinkList: numsLinks})
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return

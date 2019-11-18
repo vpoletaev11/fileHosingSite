@@ -13,18 +13,16 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
+// absolute path to upload[/upload] template file
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/upload/template/upload.html"
+
 const (
-	// send fileinfo of uploaded file into MySQL database
 	sendFileInfoToDB = "INSERT INTO files (label, filesizeBytes, description, owner, category, uploadDate) VALUES (?, ?, ?, ?, ?, ?);"
 
-	// delete fileinfo of uploaded file into MySQL database
 	deleteFileInfoFromDB = "DELETE FROM files WHERE id = ?"
 )
 
-// absolute path to template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/upload/template/upload.html"
-
-// TemplateUpload contains fields with warning message and username for login page handler template
+// TemplateUpload contains data for login[/login] page template
 type TemplateUpload struct {
 	Warning  template.HTML
 	Username string
@@ -50,7 +48,7 @@ func (pt *PassThru) Read(p []byte) (int, error) {
 	return n, err
 }
 
-// Page returns HandleFunc with access to MySQL database for upload file page
+// Page returns HandleFunc for upload[/upload] file page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := template.ParseFiles(absPathTemplate)
@@ -73,7 +71,6 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			category := r.FormValue("category")
 
 			// getting file from upload form
-			//r.ParseMultipartForm(5 * 1024 * 1024)
 			file, header, err := r.FormFile("uploaded_file")
 			if err != nil {
 				errhand.InternalError("upload", "Page", username, err, w)

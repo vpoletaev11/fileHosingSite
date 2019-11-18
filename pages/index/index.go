@@ -11,18 +11,19 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15;"
-
-// absolute path to template file
+//  absolute path to index[/index] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/index/template/index.html"
 
-// TemplateIndex contains fields with warning message and username for index page handler template
+const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15;"
+
+// TemplateIndex contains data for index[/index] page template
 type TemplateIndex struct {
 	Warning       template.HTML
 	Username      string
 	UploadedFiles []fileInfoTable
 }
 
+// fileInfoDB contains file info getted from MySQL database
 type fileInfoDB struct {
 	ID            int
 	Label         string
@@ -34,6 +35,7 @@ type fileInfoDB struct {
 	Rating        int
 }
 
+// fileInfoTable contains processed file info from fileInfoDB{}
 type fileInfoTable struct {
 	Label       string
 	Link        string
@@ -49,7 +51,7 @@ type fileInfoTable struct {
 	DescriptionComment string
 }
 
-// Page returns HandleFunc with access to MySQL database for index page
+// Page returns HandleFunc for index[/index] page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page

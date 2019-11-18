@@ -11,17 +11,19 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-const selectFileInfo = "SELECT * FROM files ORDER BY rating DESC LIMIT 15;"
-
+// absolute path to popular[/popular] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/popular/template/popular.html"
 
-// TemplatePopular contains data for popular handler template
+const selectFileInfo = "SELECT * FROM files ORDER BY rating DESC LIMIT 15;"
+
+// TemplatePopular contains data for popular[/popular] page template
 type TemplatePopular struct {
 	Warning       template.HTML
 	Username      string
 	UploadedFiles []fileInfoTable
 }
 
+// fileInfoDB contains file info getted from MySQL database
 type fileInfoDB struct {
 	ID            int
 	Label         string
@@ -33,6 +35,7 @@ type fileInfoDB struct {
 	Rating        int
 }
 
+// fileInfoTable contains processed file info from fileInfoDB{}
 type fileInfoTable struct {
 	Label       string
 	Link        string
@@ -48,6 +51,7 @@ type fileInfoTable struct {
 	DescriptionComment string
 }
 
+// Page returns HandleFunc for popular[/popular] page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page

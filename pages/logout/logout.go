@@ -7,10 +7,9 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// query to MySQL database to DELETE session
 const deleteSession = "DELETE FROM sessions WHERE cookie=?"
 
-// Page removes user cookie and redirect to login page
+// Page returns HandleFunc that removes user cookie and redirect to login page
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")

@@ -10,18 +10,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// query to MySQL database to INSERT username and password
-const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
-
-// absolute path to template file
+// absolute path to registration[/registration] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/registration/template/register.html"
 
-// TemplateReg contain field with warning message for registration page handler template
+const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
+
+// TemplateReg contains data for registration[/registration] page template
 type TemplateReg struct {
 	Warning template.HTML
 }
 
-//Page returns HandleFunc with access to MySQL database for registration page
+// Page returns HandleFunc for registration[/registration] page
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for register page
@@ -177,7 +176,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// hashAndSalt create salted hash from password
+// hashAndSalt creates salted hash from password
 func hashAndSalt(pwd string) (string, error) {
 	pwdByte := []byte(pwd)
 	hash, err := bcrypt.GenerateFromPassword(pwdByte, bcrypt.DefaultCost)

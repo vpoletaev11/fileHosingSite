@@ -11,23 +11,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// absolute path to login[/login] template file
+const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/login/template/login.html"
+
 const (
-	// query to MySQL database to SELECT password for user
 	selectPass = "SELECT password FROM users WHERE username = ?;"
 
-	// query to MySQL database to add cookie
 	insertCookie = "INSERT INTO sessions (username, cookie, expires) VALUES(?, ?, ?);"
-
-	// absolute path to template file
-	absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/login/template/login.html"
 )
 
-// TemplateLog contain field with warning message for login page handler template
+// TemplateLog contain data login[/login] page template
 type TemplateLog struct {
 	Warning template.HTML
 }
 
-//Page returns HandleFunc with access to MySQL database for login page
+//Page returns HandleFunc for login[/login] page
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for login page

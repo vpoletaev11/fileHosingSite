@@ -8,24 +8,25 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-const selectUsers = "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15;"
-
-// absolute path to template file
+// absolute path to users[/users] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/users/template/users.html"
 
-// TemplateUsers contains fields with warning message and username for users page handler template
+const selectUsers = "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15;"
+
+// TemplateUsers contains data for users page handler template
 type TemplateUsers struct {
 	Warning  template.HTML
 	Username string
 	UserList []UserInfo
 }
 
+// UserInfo contains relations of username and user rating
 type UserInfo struct {
 	Username string
 	Rating   int
 }
 
-// Page returns HandleFunc with access to MySQL database for index page
+// Page returns HandleFunc for user[/users] page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page

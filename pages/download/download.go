@@ -13,17 +13,18 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// absolute path to template file
+// absolute path to download[/download] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/download/template/download.html"
 
 const fileInfoDB = "SELECT * FROM files WHERE id = ?;"
 
-// TemplateDownload contains fields with warning message and username for login page handler template
+// TemplateDownload data for download[/download] page template
 type TemplateDownload struct {
 	Username string
 	FileInfo
 }
 
+// FileInfo contains processed file info getted from MySQL database
 type FileInfo struct {
 	DownloadLink string
 	Label        string
@@ -35,7 +36,7 @@ type FileInfo struct {
 	Rating       int
 }
 
-// Page returns HandleFunc with access to MySQL database for download page
+// Page returns HandleFunc for download[/download] page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page

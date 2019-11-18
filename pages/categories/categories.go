@@ -11,22 +11,27 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// absolute path to template file
-const absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/categories.html"
+const (
+	// absolute path to categories[/categories/] template file
+	absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/categories.html"
 
-const absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/anyCategory.html"
+	// absolute path to any category[/categories/*any category*] template file
+	absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/anyCategory.html"
+)
 
-const selectFileInfo = "SELECT * FROM files WHERE category = ? ORDER BY uploadDate DESC LIMIT ?, ?;"
+const (
+	selectFileInfo = "SELECT * FROM files WHERE category = ? ORDER BY uploadDate DESC LIMIT ?, ?;"
 
-const countRows = "SELECT COUNT(*) FROM files WHERE category = ?;"
+	countRows = "SELECT COUNT(*) FROM files WHERE category = ?;"
+)
 
-// TemplateCategories contains fields with warning message and username for login page handler template
+// TemplateCategories contains data for categories[/categories/] page template
 type TemplateCategories struct {
 	Warning  template.HTML
 	Username string
 }
 
-// TemplateAnyCategory contains data for any category handler template
+// TemplateAnyCategory contains data for any category[/categories/*any category*] template
 type TemplateAnyCategory struct {
 	Warning       template.HTML
 	Username      string
@@ -35,6 +40,7 @@ type TemplateAnyCategory struct {
 	UploadedFiles []fileInfoTable
 }
 
+// fileInfoDB contains file info getted from MySQL database
 type fileInfoDB struct {
 	ID            int
 	Label         string
@@ -46,6 +52,7 @@ type fileInfoDB struct {
 	Rating        int
 }
 
+// fileInfoTable contains processed file info from fileInfoDB{}
 type fileInfoTable struct {
 	Label        string
 	DownloadLink string
@@ -61,11 +68,13 @@ type fileInfoTable struct {
 	DescriptionComment string
 }
 
+// numLink contains relations of page number and page link
 type numLink struct {
 	NumPage int
 	Link    string
 }
 
+// anyCategoryPageHandler handling any category[/categories/*any category*] page
 func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Path[len("/categories/"):]
 	category := ""
@@ -249,7 +258,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	return
 }
 
-// Page returns HandleFunc with access to MySQL database for categories page
+// Page returns HandleFunc for categories[/categories/] and any category[/categories/*any category*] pages
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page

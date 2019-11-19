@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/database"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
@@ -21,19 +21,7 @@ const fileInfoDB = "SELECT * FROM files WHERE id = ?;"
 // TemplateDownload data for download[/download] page template
 type TemplateDownload struct {
 	Username string
-	FileInfo
-}
-
-// FileInfo contains processed file info getted from MySQL database
-type FileInfo struct {
-	DownloadLink string
-	Label        string
-	FilesizeMB   string
-	Description  string
-	Owner        string
-	Category     string
-	UploadDate   string
-	Rating       int
+	FileInfo database.DownloadFileInfo
 }
 
 // Page returns HandleFunc for download[/download] page
@@ -49,27 +37,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		case "GET":
 			fileID := r.URL.Query().Get("id")
 
-			fi := FileInfo{}
-			var uploadDateTime time.Time
-			id := 0
-			filesizeBytes := 0
-			err := db.QueryRow(fileInfoDB, fileID).Scan(
-				&id,
-				&fi.Label,
-				&filesizeBytes,
-				&fi.Description,
-				&fi.Owner,
-				&fi.Category,
-				&uploadDateTime,
-				&fi.Rating,
-			)
+			fi, err := database.FormatedDownloadFileInfo(db, fileInfoDB, fileID)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
-			fi.DownloadLink = "/files/" + strconv.Itoa(id)
-			fi.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
-			fi.FilesizeMB = fmt.Sprintf("%.6f", float64(filesizeBytes)/1024/1024) + " MB"
 
 			err = page.Execute(w, TemplateDownload{Username: username, FileInfo: fi})
 			if err != nil {

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// FileInfo contains processed file info from fileInfoDB{}
+// FileInfo contains formatted file info from MySQL database
 type FileInfo struct {
 	Label        string
 	DownloadLink string
@@ -23,8 +23,52 @@ type FileInfo struct {
 	DescriptionComment   string
 }
 
+// DownloadFileInfo contains formatted file info getted from MySQL database
+type DownloadFileInfo struct {
+	DownloadLink string
+	Label        string
+	FilesizeMB   string
+	Description  string
+	Owner        string
+	Category     string
+	UploadDate   string
+	Rating       int
+}
+
+// FormatedDownloadFileInfo returns fromatted download file info
+func FormatedDownloadFileInfo(db *sql.DB, query, argument string) (DownloadFileInfo, error) {
+	fi := DownloadFileInfo{}
+	var uploadDateTime time.Time
+	id := 0
+	filesizeBytes := 0
+	err := db.QueryRow(query, argument).Scan(
+		&id,
+		&fi.Label,
+		&filesizeBytes,
+		&fi.Description,
+		&fi.Owner,
+		&fi.Category,
+		&uploadDateTime,
+		&fi.Rating,
+	)
+	if err != nil {
+		return DownloadFileInfo{}, err
+	}
+	fi.DownloadLink = "/files/" + strconv.Itoa(id)
+	fi.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
+	fi.FilesizeMB = fmt.Sprintf("%.6f", float64(filesizeBytes)/1024/1024) + " MB"
+
+	return fi, nil
+}
+
 // FormatedFilesInfo returns array of formatted file information
-func FormatedFilesInfo(rows *sql.Rows) ([]FileInfo, error) {
+func FormatedFilesInfo(db *sql.DB, query string, args ...interface{}) ([]FileInfo, error) {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return []FileInfo{}, nil
+	}
+	defer rows.Close()
+
 	var fiTableCollection []FileInfo
 	fiTable := new(FileInfo)
 

@@ -123,14 +123,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		return
 	}
 
-	rows, err := db.Query(selectFileInfo, category, (numPage-1)*15, numPage*15)
-	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
-		return
-	}
-	defer rows.Close()
-
-	fiCollection, err := database.FormatedFilesInfo(rows)
+	fiCollection, err := database.FormatedFilesInfo(db, selectFileInfo, category, (numPage-1)*15, numPage*15)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return

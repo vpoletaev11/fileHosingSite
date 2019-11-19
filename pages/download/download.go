@@ -16,7 +16,25 @@ import (
 // absolute path to download[/download] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/download/template/download.html"
 
-const fileInfoDB = "SELECT * FROM files WHERE id = ?;"
+const (
+	fileInfoDB = "SELECT * FROM files WHERE id = ?;"
+
+	createFileRating = "INSERT INTO filesRating (fileID, voter, rating) VALUES (?, ?, ?);"
+
+	getFileRating = "SELECT rating FROM filesRating WHERE fileID = ?;"
+
+	updateGlobalFileRating = "UPDATE files SET rating= rating - ? + ?  WHERE id=?;"
+
+	updateFileRating = "UPDATE filesRating SET rating=? WHERE fileID=?;"
+
+	updateUserRating = "UPDATE users SET rating= rating -?  + ?  WHERE username= ?;"
+
+	increaseGlobalFileRating = "UPDATE files SET rating=(rating+?) WHERE id=?;"
+
+	selectOwner = "SELECT owner FROM files WHERE id= ?"
+
+	increaseUserRating = "UPDATE users SET rating= rating + ?  WHERE username= ?;"
+)
 
 // TemplateDownload data for download[/download] page template
 type TemplateDownload struct {
@@ -68,11 +86,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			id := r.RequestURI[len("/download?id="):]
 
-			_, err = db.Exec("INSERT INTO filesRating (fileID, voter, rating) VALUES (?, ?, ?);", id, username, rating)
+			_, err = db.Exec(createFileRating, id, username, rating)
 			if err != nil {
 				if strings.Contains(err.Error(), "Error 1062") {
 					var oldRating int
-					err := db.QueryRow("SELECT rating FROM filesRating WHERE fileID = ?;", id).Scan(&oldRating)
+					err := db.QueryRow(getFileRating, id).Scan(&oldRating)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -82,19 +100,19 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 						return
 					}
 
-					_, err = db.Exec("UPDATE files SET rating= rating - ? + ?  WHERE id=?;", oldRating, rating, id)
+					_, err = db.Exec(updateGlobalFileRating, rating, id)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					_, err = db.Exec("UPDATE filesRating SET rating=? WHERE fileID=?;", rating, id)
+					_, err = db.Exec(updateFileRating, rating, id)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					_, err = db.Exec("UPDATE users SET rating= rating -?  + ?  WHERE username= ?;", oldRating, rating, username)
+					_, err = db.Exec(updateUserRating, oldRating, rating, username)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -106,19 +124,19 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
-			_, err = db.Exec("UPDATE files SET rating=(rating+?) WHERE id=?;", rating, id)
+			_, err = db.Exec(increaseGlobalFileRating, rating, id)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
 
 			username := ""
-			err = db.QueryRow("SELECT owner FROM files WHERE id= ?", id).Scan(&username)
+			err = db.QueryRow(selectOwner, id).Scan(&username)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return
 			}
-			_, err = db.Exec("UPDATE users SET rating= rating + ?  WHERE username= ?;", rating, username)
+			_, err = db.Exec(increaseUserRating, rating, username)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return

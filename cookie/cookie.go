@@ -25,6 +25,8 @@ const (
 
 type page func(db *sql.DB, username string) http.HandlerFunc
 
+type adminPage func(db *sql.DB) http.HandlerFunc
+
 // CreateCookie creates cookie for user
 func CreateCookie() http.Cookie {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -108,6 +110,45 @@ func AuthWrapper(pageHandler page, db *sql.DB) http.HandlerFunc {
 		http.SetCookie(w, &cookie)
 
 		pageHandler := pageHandler(db, username)
+		// run page handler
+		pageHandler.ServeHTTP(w, r)
+	})
+}
+
+// AdminAuthWrapper grants access to admin page and extends cookie lifetime if inputted cookie are valid
+func AdminAuthWrapper(pageHandler adminPage, db *sql.DB) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// checking cookie validity
+		username, cookie, err := cookieValidator(db, r)
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintln(w, "INTERNAL ERROR. Please try later.")
+			return
+		}
+
+		// handling case when cookie invalid
+		if username == "" {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		if username != "admin" {
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+
+		// extending cookie lifetime
+		cookie.Expires = time.Now().Add(30 * time.Minute)
+		cookie.Path = "/"
+		_, err = db.Exec(updateExpires, time.Now().Add(30*time.Minute).Format("2006-01-02 15:04:05"), cookie.Value)
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintln(w, "INTERNAL ERROR. Please try later.")
+			return
+		}
+		http.SetCookie(w, &cookie)
+
+		pageHandler := pageHandler(db)
 		// run page handler
 		pageHandler.ServeHTTP(w, r)
 	})

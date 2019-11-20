@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/vpoletaev11/fileHostingSite/cookie"
+	"github.com/vpoletaev11/fileHostingSite/pages/admin"
 	"github.com/vpoletaev11/fileHostingSite/pages/categories"
 	"github.com/vpoletaev11/fileHostingSite/pages/download"
 	"github.com/vpoletaev11/fileHostingSite/pages/index"
@@ -59,6 +60,9 @@ func main() {
 
 	// users page handler
 	http.HandleFunc("/users", cookie.AuthWrapper(users.Page, db))
+
+	// admin page handler
+	http.HandleFunc("/admin", cookie.AdminAuthWrapper(admin.Page, db))
 
 	// automatic cleaning expired sessions from MySQL database
 	go cookie.SessionsCleaner(db)

@@ -3,23 +3,16 @@ package cookie
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
 )
 
 const (
-	// query to MySQL database to SELECT username from sessions
-	deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
-
-	// query to MySQL database to select cookie expiring time from session
 	getExpiresAndUsername = "SELECT expires, username FROM sessions WHERE cookie=?;"
 
-	// query to MySQL database to update cookie expiring time
 	updateExpires = "UPDATE sessions SET expires=? WHERE cookie=?;"
 
-	// query to MySQL database to delete session
 	deleteSession = "DELETE FROM sessions WHERE cookie=?"
 )
 
@@ -152,17 +145,4 @@ func AdminAuthWrapper(pageHandler adminPage, db *sql.DB) http.HandlerFunc {
 		// run page handler
 		pageHandler.ServeHTTP(w, r)
 	})
-}
-
-// todo: make it stateless.
-
-// SessionsCleaner removes expired sessions from MySQL database.
-func SessionsCleaner(db *sql.DB) {
-	for {
-		_, err := db.Exec(deleteOldSessions, time.Now().Add(-1*time.Hour).Format("2006-01-02 15:04:05"))
-		if err != nil {
-			log.Println("[SessionsCleaner] Cannot delete old sessions: ", err)
-		}
-		time.Sleep(1 * time.Hour)
-	}
 }

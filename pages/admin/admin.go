@@ -4,9 +4,13 @@ import (
 	"database/sql"
 	"html/template"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
+
+const deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
 
 type TemplateAdmin struct {
 	Warning template.HTML
@@ -34,7 +38,24 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 
 		case "POST":
+			res, err := db.Exec(deleteOldSessions, time.Now().Add(-1*time.Hour).Format("2006-01-02 15:04:05"))
+			if err != nil {
+				errhand.InternalError("index", "Page", "admin", err, w)
+				return
+			}
 
+			cookiesDeleted, err := res.RowsAffected()
+			if err != nil {
+				errhand.InternalError("index", "Page", "admin", err, w)
+				return
+			}
+
+			err = page.Execute(w, TemplateAdmin{Warning: "Deleted " + template.HTML(strconv.Itoa(int(cookiesDeleted))) + " old cookies"})
+			if err != nil {
+				errhand.InternalError("index", "Page", "admin", err, w)
+				return
+			}
+			return
 		}
 	}
 }

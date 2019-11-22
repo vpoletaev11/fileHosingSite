@@ -307,11 +307,3 @@ func TestAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
 
 	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
 }
-
-// func TestSessionsCleaner(t *testing.T) {
-// 	db, sqlMock, err := sqlmock.New()
-// 	require.NoError(t, err)
-
-// 	sqlMock.ExpectExec("DELETE FROM sessions WHERE expires <= ").WithArgs(anyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
-// 	SessionsCleaner(db)
-// }

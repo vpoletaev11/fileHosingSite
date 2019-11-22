@@ -2,13 +2,14 @@ package admin
 
 import (
 	"database/sql"
+	"html/template"
 	"net/http"
-	"text/template"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
 type TemplateAdmin struct {
+	Warning template.HTML
 }
 
 //  absolute path to admin[/admin] template file
@@ -31,6 +32,9 @@ func Page(db *sql.DB) http.HandlerFunc {
 				return
 			}
 			return
+
+		case "POST":
+
 		}
 	}
 }

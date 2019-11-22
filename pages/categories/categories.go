@@ -49,28 +49,13 @@ type numLink struct {
 // anyCategoryPageHandler handling any category[/categories/*any category*] page
 func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Path[len("/categories/"):]
-	category := ""
 	switch link {
-
-	case "other":
-		category = "other"
-
-	case "games":
-		category = "games"
-
-	case "documents":
-		category = "documents"
-
-	case "projects":
-		category = "projects"
-
-	case "music":
-
-		category = "music"
-
+	case "other", "games", "documents", "projects", "music":
 	default:
 		http.Redirect(w, r, "/categories/", http.StatusFound)
+		return
 	}
+	category := link
 	//
 	//
 	//

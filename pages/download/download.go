@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -100,21 +99,22 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 						return
 					}
 
-					_, err = db.Exec(updateGlobalFileRating, rating, id)
+					_, err = db.Exec(updateGlobalFileRating, oldRating, rating, id)
 					if err != nil {
-						fmt.Println(err)
+						errhand.InternalError("download", "Page", username, err, w)
 						return
 					}
 
 					_, err = db.Exec(updateFileRating, rating, id)
 					if err != nil {
-						fmt.Println(err)
+						errhand.InternalError("download", "Page", username, err, w)
 						return
 					}
 
 					_, err = db.Exec(updateUserRating, oldRating, rating, username)
 					if err != nil {
-						log.Fatal(err)
+						errhand.InternalError("download", "Page", username, err, w)
+						return
 					}
 
 					http.Redirect(w, r, r.RequestURI, 302)

@@ -64,9 +64,6 @@ func main() {
 	// admin page handler
 	http.HandleFunc("/admin", cookie.AdminAuthWrapper(admin.Page, db))
 
-	// automatic cleaning expired sessions from MySQL database
-	go cookie.SessionsCleaner(db)
-
 	fmt.Println("starting server at :8080")
 	http.ListenAndServe(":8080", nil)
 }

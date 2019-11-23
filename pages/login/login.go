@@ -2,6 +2,7 @@ package login
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -49,56 +50,23 @@ func Page(db *sql.DB) http.HandlerFunc {
 			username := r.FormValue("username")
 			password := r.FormValue("password")
 
-			//handle case when len(username) == 0
-			if username == "" {
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be empty</h2>"}
+			err := usernameValidator(username)
+			if err != nil {
+				templateData := TemplateLog{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("login", "Page", "", err, w)
+					errhand.InternalError("registration", "Page", "", err, w)
 					return
 				}
 				return
 			}
 
-			// handle case when len(password) == 0
-			if password == "" {
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be empty</h2>"}
+			err = passwordValidator(password)
+			if err != nil {
+				templateData := TemplateLog{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("login", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(username) > 20
-			if len(username) > 20 {
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("login", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(password) > 20
-			if len(password) > 20 {
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("login", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handling case when username is non-lowercase
-			if username != strings.ToLower(username) {
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Please use lower case username</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("login", "Page", "", err, w)
+					errhand.InternalError("registration", "Page", "", err, w)
 					return
 				}
 				return
@@ -107,18 +75,26 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// query to MySQL database to SELECT password for user.
 			// This query also checks is username exist
 			hashPassDB := ""
-			err := db.QueryRow(selectPass, username).Scan(&hashPassDB)
+			err = db.QueryRow(selectPass, username).Scan(&hashPassDB)
 			if err != nil {
 				w.WriteHeader(500)
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
 			// handle case when username doesn't exist
 			if hashPassDB == "" {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
@@ -126,7 +102,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 			err = comparePasswords(hashPassDB, password)
 			if err != nil {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 				return
 			}
 
@@ -137,7 +117,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 			if err != nil {
 				w.WriteHeader(500)
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				page.Execute(w, templateData)
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
 			}
 
 			// sending cookie
@@ -147,6 +131,33 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func passwordValidator(password string) error {
+	if password == "" {
+		return fmt.Errorf("Password cannot be empty")
+	}
+
+	if len(password) > 20 {
+		return fmt.Errorf("Password cannot be longer than 20 characters")
+	}
+	return nil
+}
+
+func usernameValidator(username string) error {
+	if username == "" {
+		return fmt.Errorf("Username cannot be empty")
+	}
+
+	if len(username) > 20 {
+		return fmt.Errorf("Username cannot be longer than 20 characters")
+	}
+
+	// handling case when username is non-lowercase
+	if username != strings.ToLower(username) {
+		return fmt.Errorf("Please use lower case username")
+	}
+	return nil
 }
 
 // ComparePasswords compare hashed password with plain.

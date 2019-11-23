@@ -2,6 +2,7 @@ package registration
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -47,9 +48,9 @@ func Page(db *sql.DB) http.HandlerFunc {
 			password1 := r.FormValue("password1")
 			password2 := r.FormValue("password2")
 
-			// handle case when len(username) == 0
-			if len(username) == 0 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be empty</h2>"}
+			err := usernameValidator(username)
+			if err != nil {
+				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
 					errhand.InternalError("registration", "Page", "", err, w)
@@ -58,75 +59,9 @@ func Page(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			// handle case when len(password1) == 0
-			if len(password1) == 0 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(password2) == 0
-			if len(password2) == 0 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be empty</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(username) > 20
-			if len(username) > 20 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Username cannot be longer than 20 characters</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(password1) > 20
-			if len(password1) > 20 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handle case when len(password2) > 20
-			if len(password2) > 20 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Password cannot be longer than 20 characters</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handling case when username is non-lowercase
-			if username != strings.ToLower(username) {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Please use lower case username</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-				return
-			}
-
-			// handling case when passwords doesn't match
-			if password1 != password2 {
-				templateData := TemplateReg{"<h2 style=\"color:red\">Passwords doesn't match</h2>"}
+			err = passwordsValidator(password1, password2)
+			if err != nil {
+				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
 					errhand.InternalError("registration", "Page", "", err, w)
@@ -174,6 +109,45 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func usernameValidator(username string) error {
+	if len(username) == 0 {
+		return fmt.Errorf("Username cannot be empty")
+	}
+
+	if len(username) > 20 {
+		return fmt.Errorf("Username cannot be longer than 20 characters")
+	}
+
+	// handling case when username is non-lowercase
+	if username != strings.ToLower(username) {
+		return fmt.Errorf("Please use lower case username")
+	}
+	return nil
+}
+
+func passwordsValidator(password1, password2 string) error {
+	if len(password1) == 0 {
+		return fmt.Errorf("Password cannot be empty")
+	}
+
+	if len(password2) == 0 {
+		return fmt.Errorf("Password cannot be empty")
+	}
+
+	if len(password1) > 20 {
+		return fmt.Errorf("Password cannot be longer than 20 characters")
+	}
+
+	if len(password2) > 20 {
+		return fmt.Errorf("Password cannot be longer than 20 characters")
+	}
+
+	if password1 != password2 {
+		return fmt.Errorf("Passwords doesn't match")
+	}
+	return nil
 }
 
 // hashAndSalt creates salted hash from password

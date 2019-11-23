@@ -48,59 +48,28 @@ type numLink struct {
 
 // anyCategoryPageHandler handling any category[/categories/*any category*] page
 func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
+	// getting category
 	link := r.URL.Path[len("/categories/"):]
 	switch link {
 	case "other", "games", "documents", "projects", "music":
 	default:
-		http.Redirect(w, r, "/categories/", http.StatusFound)
+		fmt.Fprintln(w, "ERROR: Incorrect category")
 		return
 	}
 	category := link
-	//
-	//
-	//
 
-	page, err := template.ParseFiles(absPathTemplateAnyCategory)
+	// getting count of pages
+	pagesCount, err := pagesCount(db, category)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
 	}
 
-	rowsCount := 0
-	err = db.QueryRow(countRows, category).Scan(&rowsCount)
+	// getting number of current page
+	numPage, err := numPage(r)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		fmt.Fprintln(w, "ERROR: Incorrect get request")
 		return
-	}
-	if rowsCount == 0 {
-		err = page.Execute(w, TemplateAnyCategory{Username: username})
-		if err != nil {
-			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
-			return
-		}
-	}
-
-	numPageStr := r.URL.Query().Get("p")
-	numPage := 0
-	if numPageStr == "" {
-		numPage = 1
-	} else {
-		numPage, err = strconv.Atoi(numPageStr)
-		if err != nil {
-			http.Redirect(w, r, "/categories/"+category, http.StatusFound)
-			return
-		}
-	}
-	if numPage == 0 {
-		numPage++
-	}
-
-	pagesCount := rowsCount / 15
-	if rowsCount%15 != 0 {
-		pagesCount++
-	}
-	if pagesCount == 0 {
-		pagesCount++
 	}
 
 	if numPage > pagesCount {
@@ -108,7 +77,15 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		return
 	}
 
+	// getting files info for current page
 	fiCollection, err := database.FormatedFilesInfo(db, selectFileInfo, category, (numPage-1)*15, numPage*15)
+	if err != nil {
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		return
+	}
+
+	// creating template for current page
+	page, err := template.ParseFiles(absPathTemplateAnyCategory)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
@@ -123,41 +100,8 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		return
 	}
 
-	var numsLinks []numLink
-	if pagesCount > 25 {
-		link := "/categories/" + category + "?p=" + "1"
-		numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
-		if numPage < 10 {
-			for i := 2; i <= 25; i++ {
-				pageNum := strconv.Itoa(i)
-				link := "/categories/" + category + "?p=" + pageNum
-				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
-			}
-
-		} else if numPage > pagesCount-15 {
-			for i := numPage - 5; i <= pagesCount-2; i++ {
-				pageNum := strconv.Itoa(i)
-				link := "/categories/" + category + "?p=" + pageNum
-				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
-			}
-
-		} else {
-			for i := numPage - 5; i < numPage+20; i++ {
-				pageNum := strconv.Itoa(i)
-				link := "/categories/" + category + "?p=" + pageNum
-				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
-			}
-		}
-		link = "/categories/" + category + "?p=" + strconv.Itoa(pagesCount)
-		numsLinks = append(numsLinks, numLink{NumPage: pagesCount, Link: link})
-
-	} else {
-		for i := 0; i != pagesCount; i++ {
-			pageNum := strconv.Itoa(i + 1)
-			link := "/categories/" + category + "?p=" + pageNum
-			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
-		}
-	}
+	// creating navigation bar if count of pages > 1
+	numsLinks := navigationBar(pagesCount, numPage, category)
 	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, LinkList: numsLinks})
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
@@ -187,4 +131,78 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			anyCategoryPageHandler(db, username, w, r)
 		}
 	}
+}
+
+// pagesCount returns pages count calculated from count MySQL database file info rows
+func pagesCount(db *sql.DB, category string) (int, error) {
+	rowsCount := 0
+	err := db.QueryRow(countRows, category).Scan(&rowsCount)
+	if err != nil {
+		return 0, err
+	}
+	pagesCount := (rowsCount-1)/15 + 1
+
+	return pagesCount, nil
+}
+
+// numPage gets number of page from GET request
+func numPage(r *http.Request) (int, error) {
+	numPageStr := r.URL.Query().Get("p")
+	if numPageStr == "" {
+		return 1, nil
+	}
+	numPage := 0
+	numPage, err := strconv.Atoi(numPageStr)
+	if err != nil {
+		return 0, err
+	}
+	if numPage <= 0 {
+		return 0, fmt.Errorf("Incorrect page number")
+	}
+
+	return numPage, nil
+}
+
+// navigationBar returns array with relations of page number and page link, where page number == page link
+func navigationBar(pagesCount, numPage int, category string) []numLink {
+	var numsLinks []numLink
+	if pagesCount > 25 {
+		// add the first link (literally 1)
+		link := "/categories/" + category + "?p=" + "1"
+		numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
+
+		switch {
+		case numPage < 10:
+			for i := 2; i <= 25; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
+			}
+		case numPage > pagesCount-15:
+			for i := numPage - 5; i <= pagesCount-2; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+			}
+		default:
+			for i := numPage - 5; i < numPage+20; i++ {
+				pageNum := strconv.Itoa(i)
+				link := "/categories/" + category + "?p=" + pageNum
+				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+			}
+
+		}
+
+		// add the last link == len(pagesCount)
+		link = "/categories/" + category + "?p=" + strconv.Itoa(pagesCount)
+		numsLinks = append(numsLinks, numLink{NumPage: pagesCount, Link: link})
+
+	} else {
+		for i := 0; i != pagesCount; i++ {
+			pageNum := strconv.Itoa(i + 1)
+			link := "/categories/" + category + "?p=" + pageNum
+			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+		}
+	}
+	return numsLinks
 }

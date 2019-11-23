@@ -78,34 +78,14 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			}
 			defer file.Close()
 
-			// handling of case when filesize more than 1GB
-			if header.Size > 1024*1024*1024 {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize cannot be more than 1GB</h2>", Username: username})
-				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
-					return
-				}
-				return
-			}
-
-			// handling of case when in form field filename len(filename) > 50
-			if len(filename) > 50 {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filename are too long</h2>", Username: username})
-				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
-					return
-				}
-				return
-			}
-
 			// if filename field in form is empty will be used original filename
 			if len(filename) == 0 {
 				filename = header.Filename
 			}
 
-			// handling of case when in form field description len(description) > 500
-			if len(description) > 500 {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Description are too long</h2>", Username: username})
+			err = fileInfoValidator(header.Size, filename, description, category)
+			if err != nil {
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>", Username: username})
 				if err != nil {
 					errhand.InternalError("upload", "Page", username, err, w)
 					return
@@ -151,4 +131,26 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func fileInfoValidator(filesize int64, filename, description, category string) error {
+	// handling of case when filesize more than 1GB
+	if filesize > 1024*1024*1024 {
+		return fmt.Errorf("Filesize cannot be more than 1GB")
+	}
+
+	if len(filename) > 50 {
+		return fmt.Errorf("Filename are too long")
+	}
+
+	if len(description) > 500 {
+		return fmt.Errorf("Description are too long")
+	}
+
+	switch category {
+	case "other", "games", "documents", "projects", "music":
+	default:
+		return fmt.Errorf("Unknown category")
+	}
+	return nil
 }

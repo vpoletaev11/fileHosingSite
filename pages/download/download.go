@@ -85,65 +85,86 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			id := r.RequestURI[len("/download?id="):]
 
-			_, err = db.Exec(createFileRating, id, username, rating)
+			alreadyRated, err := setRating(db, id, username, rating)
 			if err != nil {
-				if strings.Contains(err.Error(), "Error 1062") {
-					var oldRating int
-					err := db.QueryRow(getFileRating, id).Scan(&oldRating)
-					if err != nil {
-						fmt.Println(err)
-						return
-					}
-					if oldRating == rating {
-						http.Redirect(w, r, r.RequestURI, 302)
-						return
-					}
+				errhand.InternalError("download", "Page", username, err, w)
+				return
+			}
 
-					_, err = db.Exec(updateGlobalFileRating, oldRating, rating, id)
-					if err != nil {
-						errhand.InternalError("download", "Page", username, err, w)
-						return
-					}
-
-					_, err = db.Exec(updateFileRating, rating, id)
-					if err != nil {
-						errhand.InternalError("download", "Page", username, err, w)
-						return
-					}
-
-					_, err = db.Exec(updateUserRating, oldRating, rating, username)
-					if err != nil {
-						errhand.InternalError("download", "Page", username, err, w)
-						return
-					}
-
-					http.Redirect(w, r, r.RequestURI, 302)
+			if alreadyRated {
+				err := changeRating(db, rating, id, username)
+				if err != nil {
+					errhand.InternalError("download", "Page", username, err, w)
 					return
 				}
-
-				errhand.InternalError("download", "Page", username, err, w)
-				return
-			}
-			_, err = db.Exec(increaseGlobalFileRating, rating, id)
-			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
-				return
-			}
-
-			username := ""
-			err = db.QueryRow(selectOwner, id).Scan(&username)
-			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
-				return
-			}
-			_, err = db.Exec(increaseUserRating, rating, username)
-			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
-				return
 			}
 
 			http.Redirect(w, r, r.RequestURI, 302)
 			return
+
 		}
 	}
+}
+
+// setRating sets rating for file and file owner
+func setRating(db *sql.DB, id, username string, rating int) (alreadyRated bool, err error) {
+	_, err = db.Exec(createFileRating, id, username, rating)
+	if err != nil {
+		if strings.Contains(err.Error(), "Error 1062") {
+			return true, nil
+		}
+		return false, err
+	}
+
+	_, err = db.Exec(increaseGlobalFileRating, rating, id)
+	if err != nil {
+		return false, err
+	}
+
+	owner := ""
+	err = db.QueryRow(selectOwner, id).Scan(&owner)
+	if err != nil {
+		return false, err
+	}
+	_, err = db.Exec(increaseUserRating, rating, owner)
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil
+}
+
+// changeRating changes rating for file and file owner
+func changeRating(db *sql.DB, rating int, id, username string) error {
+	var oldRating int
+	err := db.QueryRow(getFileRating, id).Scan(&oldRating)
+	if err != nil {
+		return err
+	}
+
+	if oldRating == rating {
+		return nil
+	}
+
+	_, err = db.Exec(updateGlobalFileRating, oldRating, rating, id)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(updateFileRating, rating, id)
+	if err != nil {
+		return err
+	}
+
+	owner := ""
+	err = db.QueryRow(selectOwner, id).Scan(&owner)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(updateUserRating, oldRating, rating, owner)
+	if err != nil {
+		return err
+	}
+	return nil
 }

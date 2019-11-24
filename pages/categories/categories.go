@@ -25,6 +25,11 @@ const (
 	countRows = "SELECT COUNT(*) FROM files WHERE category = ?;"
 )
 
+const (
+	rowsInPage       = 15 // how many rows of file info will be displayed on page
+	maxLinksInNavBar = 25 // how many links will be displayed on navigation bar
+)
+
 // TemplateCategories contains data for categories[/categories/] page template
 type TemplateCategories struct {
 	Warning  template.HTML
@@ -140,7 +145,7 @@ func pagesCount(db *sql.DB, category string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	pagesCount := (rowsCount-1)/15 + 1
+	pagesCount := (rowsCount-1)/rowsInPage + 1
 
 	return pagesCount, nil
 }
@@ -166,29 +171,29 @@ func numPage(r *http.Request) (int, error) {
 // navigationBar returns array with relations of page number and page link, where page number == page link
 func navigationBar(pagesCount, numPage int, category string) []numLink {
 	var numsLinks []numLink
-	if pagesCount > 25 {
+	if pagesCount > maxLinksInNavBar {
 		// add the first link (literally 1)
 		link := "/categories/" + category + "?p=" + "1"
 		numsLinks = append(numsLinks, numLink{NumPage: 1, Link: link})
 
 		switch {
 		case numPage < 10:
-			for i := 2; i <= 25; i++ {
+			for i := 2; i <= maxLinksInNavBar; i++ {
 				pageNum := strconv.Itoa(i)
 				link := "/categories/" + category + "?p=" + pageNum
 				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 			}
-		case numPage > pagesCount-15:
+		case numPage >= pagesCount-15:
 			for i := numPage - 5; i <= pagesCount-2; i++ {
 				pageNum := strconv.Itoa(i)
 				link := "/categories/" + category + "?p=" + pageNum
-				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 			}
 		default:
-			for i := numPage - 5; i < numPage+20; i++ {
+			for i := numPage - 5; i <= numPage+20; i++ {
 				pageNum := strconv.Itoa(i)
 				link := "/categories/" + category + "?p=" + pageNum
-				numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 			}
 
 		}
@@ -198,10 +203,10 @@ func navigationBar(pagesCount, numPage int, category string) []numLink {
 		numsLinks = append(numsLinks, numLink{NumPage: pagesCount, Link: link})
 
 	} else {
-		for i := 0; i != pagesCount; i++ {
-			pageNum := strconv.Itoa(i + 1)
+		for i := 1; i <= pagesCount; i++ {
+			pageNum := strconv.Itoa(i)
 			link := "/categories/" + category + "?p=" + pageNum
-			numsLinks = append(numsLinks, numLink{NumPage: i + 1, Link: link})
+			numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 		}
 	}
 	return numsLinks

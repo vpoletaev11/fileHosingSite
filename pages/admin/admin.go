@@ -12,6 +12,8 @@ import (
 
 const deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
 
+const cookieLifetime = 30 * time.Minute
+
 type TemplateAdmin struct {
 	Warning template.HTML
 }
@@ -38,7 +40,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 
 		case "POST":
-			res, err := db.Exec(deleteOldSessions, time.Now().Add(-1*time.Hour).Format("2006-01-02 15:04:05"))
+			res, err := db.Exec(deleteOldSessions, time.Now().Add(-cookieLifetime).Format("2006-01-02 15:04:05"))
 			if err != nil {
 				errhand.InternalError("index", "Page", "admin", err, w)
 				return

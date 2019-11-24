@@ -22,6 +22,12 @@ const (
 	deleteFileInfoFromDB = "DELETE FROM files WHERE id = ?"
 )
 
+const (
+	maxFilenameLen    = 50
+	maxDescriptionLen = 500
+	maxFilesize       = 1024 * 1024 * 1024
+)
+
 // TemplateUpload contains data for login[/login] page template
 type TemplateUpload struct {
 	Warning  template.HTML
@@ -135,15 +141,15 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 func fileInfoValidator(filesize int64, filename, description, category string) error {
 	// handling of case when filesize more than 1GB
-	if filesize > 1024*1024*1024 {
+	if filesize > maxFilesize {
 		return fmt.Errorf("Filesize cannot be more than 1GB")
 	}
 
-	if len(filename) > 50 {
+	if len(filename) > maxFilenameLen {
 		return fmt.Errorf("Filename are too long")
 	}
 
-	if len(description) > 500 {
+	if len(description) > maxDescriptionLen {
 		return fmt.Errorf("Description are too long")
 	}
 

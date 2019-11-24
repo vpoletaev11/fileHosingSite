@@ -21,6 +21,11 @@ const (
 	insertCookie = "INSERT INTO sessions (username, cookie, expires) VALUES(?, ?, ?);"
 )
 
+const (
+	maxPasswordLen = 40
+	maxUsernameLen = 20
+)
+
 // TemplateLog contain data login[/login] page template
 type TemplateLog struct {
 	Warning template.HTML
@@ -138,7 +143,7 @@ func passwordValidator(password string) error {
 		return fmt.Errorf("Password cannot be empty")
 	}
 
-	if len(password) > 20 {
+	if len(password) > maxPasswordLen {
 		return fmt.Errorf("Password cannot be longer than 20 characters")
 	}
 	return nil
@@ -149,7 +154,7 @@ func usernameValidator(username string) error {
 		return fmt.Errorf("Username cannot be empty")
 	}
 
-	if len(username) > 20 {
+	if len(username) > maxUsernameLen {
 		return fmt.Errorf("Username cannot be longer than 20 characters")
 	}
 

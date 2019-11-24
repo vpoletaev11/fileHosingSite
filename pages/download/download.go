@@ -35,6 +35,11 @@ const (
 	increaseUserRating = "UPDATE users SET rating= rating + ?  WHERE username= ?;"
 )
 
+const (
+	maxRating = 10  // maximal rating that user can set
+	minRating = -10 // minimal rating that user can set
+)
+
 // TemplateDownload data for download[/download] page template
 type TemplateDownload struct {
 	Username string
@@ -74,11 +79,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				fmt.Fprintln(w, "INCORRECT POST PARAMETER")
 				return
 			}
-			if rating > 10 {
+			if rating > maxRating {
 				fmt.Fprintln(w, "INCORRECT POST PARAMETER")
 				return
 			}
-			if rating < -10 {
+			if rating < minRating {
 				fmt.Fprintln(w, "INCORRECT POST PARAMETER")
 				return
 			}

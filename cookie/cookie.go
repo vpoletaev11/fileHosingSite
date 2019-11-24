@@ -16,6 +16,10 @@ const (
 	deleteSession = "DELETE FROM sessions WHERE cookie=?"
 )
 
+const (
+	cookieLifetime = 30 * time.Minute
+)
+
 type page func(db *sql.DB, username string) http.HandlerFunc
 
 type adminPage func(db *sql.DB) http.HandlerFunc
@@ -35,7 +39,7 @@ func CreateCookie() http.Cookie {
 		Name:    "session_id",
 		Path:    "/",
 		Value:   string(cookieVal),
-		Expires: time.Now().Add(30 * time.Minute),
+		Expires: time.Now().Add(cookieLifetime),
 	}
 
 	return cookie
@@ -92,9 +96,9 @@ func AuthWrapper(pageHandler page, db *sql.DB) http.HandlerFunc {
 		}
 
 		// extending cookie lifetime
-		cookie.Expires = time.Now().Add(30 * time.Minute)
+		cookie.Expires = time.Now().Add(cookieLifetime)
 		cookie.Path = "/"
-		_, err = db.Exec(updateExpires, time.Now().Add(30*time.Minute).Format("2006-01-02 15:04:05"), cookie.Value)
+		_, err = db.Exec(updateExpires, cookie.Expires.Format("2006-01-02 15:04:05"), cookie.Value)
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintln(w, "INTERNAL ERROR. Please try later.")
@@ -133,7 +137,7 @@ func AdminAuthWrapper(pageHandler adminPage, db *sql.DB) http.HandlerFunc {
 		// extending cookie lifetime
 		cookie.Expires = time.Now().Add(30 * time.Minute)
 		cookie.Path = "/"
-		_, err = db.Exec(updateExpires, time.Now().Add(30*time.Minute).Format("2006-01-02 15:04:05"), cookie.Value)
+		_, err = db.Exec(updateExpires, cookie.Expires.Format("2006-01-02 15:04:05"), cookie.Value)
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintln(w, "INTERNAL ERROR. Please try later.")

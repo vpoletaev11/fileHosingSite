@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const (
+	filenameLen    = 20
+	descriptionLen = 25
+)
+
 // FileInfo contains formatted file info from MySQL database
 type FileInfo struct {
 	Label        string
@@ -90,14 +95,14 @@ func FormatedFilesInfo(db *sql.DB, query string, args ...interface{}) ([]FileInf
 		}
 		fiTable.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
 
-		if len(fiTable.LabelComment) > 20 {
-			fiTable.Label = fiTable.LabelComment[:20] + "..."
+		if len(fiTable.LabelComment) > filenameLen {
+			fiTable.Label = fiTable.LabelComment[:filenameLen] + "..."
 		} else {
 			fiTable.Label = fiTable.LabelComment
 		}
 
-		if len(fiTable.DescriptionComment) > 25 {
-			fiTable.Description = fiTable.DescriptionComment[:25] + "..."
+		if len(fiTable.DescriptionComment) > descriptionLen {
+			fiTable.Description = fiTable.DescriptionComment[:descriptionLen] + "..."
 		} else {
 			fiTable.Description = fiTable.DescriptionComment
 		}

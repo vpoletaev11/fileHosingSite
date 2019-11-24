@@ -16,6 +16,11 @@ const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostin
 
 const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
 
+const (
+	maxPasswordLen = 40
+	maxUsernameLen = 20
+)
+
 // TemplateReg contains data for registration[/registration] page template
 type TemplateReg struct {
 	Warning template.HTML
@@ -116,7 +121,7 @@ func usernameValidator(username string) error {
 		return fmt.Errorf("Username cannot be empty")
 	}
 
-	if len(username) > 20 {
+	if len(username) > maxUsernameLen {
 		return fmt.Errorf("Username cannot be longer than 20 characters")
 	}
 
@@ -136,11 +141,11 @@ func passwordsValidator(password1, password2 string) error {
 		return fmt.Errorf("Password cannot be empty")
 	}
 
-	if len(password1) > 20 {
+	if len(password1) > maxPasswordLen {
 		return fmt.Errorf("Password cannot be longer than 20 characters")
 	}
 
-	if len(password2) > 20 {
+	if len(password2) > maxPasswordLen {
 		return fmt.Errorf("Password cannot be longer than 20 characters")
 	}
 

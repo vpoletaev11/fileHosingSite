@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
@@ -14,7 +15,7 @@ import (
 // absolute path to registration[/registration] template file
 const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/registration/template/register.html"
 
-const insertLogPass = "INSERT INTO users(username, password) VALUES(?, ?);"
+const createUser = "INSERT INTO users(username, password, timezone) VALUES(?, ?, ?);"
 
 const (
 	maxPasswordLen = 40
@@ -52,8 +53,9 @@ func Page(db *sql.DB) http.HandlerFunc {
 			username := r.FormValue("username")
 			password1 := r.FormValue("password1")
 			password2 := r.FormValue("password2")
+			timezone := r.FormValue("timezone")
 
-			err := usernameValidator(username)
+			err = usernameValidator(username)
 			if err != nil {
 				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
@@ -65,6 +67,17 @@ func Page(db *sql.DB) http.HandlerFunc {
 			}
 
 			err = passwordsValidator(password1, password2)
+			if err != nil {
+				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
+				err := page.Execute(w, templateData)
+				if err != nil {
+					errhand.InternalError("registration", "Page", "", err, w)
+					return
+				}
+				return
+			}
+
+			err = timezoneValidator(timezone)
 			if err != nil {
 				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
@@ -89,7 +102,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 			// writing username and salted hashed password to MySQL database
 			// MySQL database does not allow to enter not unique usernames (username is primary key)
-			_, err = db.Exec(insertLogPass, username, hashedPass)
+			_, err = db.Exec(createUser, username, hashedPass, timezone)
 			if err != nil {
 				// handling case when username is not unique
 				if strings.Contains(err.Error(), "Error 1062") {
@@ -114,6 +127,22 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func timezoneValidator(timezone string) error {
+	if timezone == "empty" {
+		return fmt.Errorf("Please set your timezone")
+	}
+	if timezone == "" {
+		return fmt.Errorf("Incorrect timezone")
+	}
+
+	_, err := time.LoadLocation(timezone)
+	if err != nil {
+		return fmt.Errorf("Incorrect timezone")
+
+	}
+	return nil
 }
 
 func usernameValidator(username string) error {

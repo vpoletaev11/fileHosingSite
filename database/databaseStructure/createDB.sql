@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
 	PRIMARY KEY(username),
 	username VARCHAR(20) NOT NULL,
 	password VARCHAR(60) NOT NULL,
+	timezone VARCHAR(40) NOT NULL,
 	rating INT DEFAULT 0
 );
 

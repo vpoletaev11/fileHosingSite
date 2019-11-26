@@ -2,7 +2,9 @@
     position: absolute;
     margin-top: 15%;
     margin-left: 35%;
-    width: 30%;
-    height: 35%;
+    padding-left: 3%;
+    padding-right: 5%;
+    padding-top: 2%;
+    padding-bottom: 2%;
     background-color: #d1c2ba;
 }

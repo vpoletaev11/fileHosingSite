@@ -8,6 +8,7 @@
 <body bgcolor=#f1ded3>
     <div class="menu">
         <ul class="nav">
+            <li><a href="/">Home</a></li>
             <li><a href="/upload">Upload file</a></li>
             <li><a href="/categories">Categories</a></li>
             <li><a href="/popular">Most popular</a></li>
@@ -35,7 +36,7 @@
                             <td width="10%" title={{ .FilesizeBytesComment}}>{{ .FilesizeMb}}</td>
                             <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
                             <td width="15%">{{ .Owner}}</td>
-                            <td width="10%"><a href=/categories/{{ .Category}}>{{ .Category}}</a></td>
+                            <td width="10%">{{ .Category}}</td>
                             <td width="15%">{{ .UploadDate}}</td>
                             <td width="10%">{{ .Rating}}</td>
                         </tr>

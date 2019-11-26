@@ -33,7 +33,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		}
 		switch r.Method {
 		case "GET":
-			fiCollection, err := database.FormatedFilesInfo(db, selectFileInfo)
+			fiCollection, err := database.FormatedFilesInfo(username, db, selectFileInfo)
 			if err != nil {
 				errhand.InternalError("index", "Page", username, err, w)
 				return

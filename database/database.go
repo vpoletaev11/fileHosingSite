@@ -12,6 +12,10 @@ const (
 	descriptionLen = 25
 )
 
+const (
+	getUserTimezone = "SELECT timezone FROM users WHERE username = ?;"
+)
+
 // FileInfo contains formatted file info from MySQL database
 type FileInfo struct {
 	Label        string
@@ -40,8 +44,25 @@ type DownloadFileInfo struct {
 	Rating       int
 }
 
+func userLocalTime(db *sql.DB, globalTime time.Time, username string) (time.Time, error) {
+	userTimezone := ""
+	err := db.QueryRow(getUserTimezone, username).Scan(&userTimezone)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	location, err := time.LoadLocation(userTimezone)
+	if err != nil {
+		return time.Time{}, err
+
+	}
+
+	globalTime = globalTime.In(location)
+	return globalTime, nil
+}
+
 // FormatedDownloadFileInfo returns fromatted download file info
-func FormatedDownloadFileInfo(db *sql.DB, query, argument string) (DownloadFileInfo, error) {
+func FormatedDownloadFileInfo(username string, db *sql.DB, query, argument string) (DownloadFileInfo, error) {
 	fi := DownloadFileInfo{}
 	var uploadDateTime time.Time
 	id := 0
@@ -60,14 +81,18 @@ func FormatedDownloadFileInfo(db *sql.DB, query, argument string) (DownloadFileI
 		return DownloadFileInfo{}, err
 	}
 	fi.DownloadLink = "/files/" + strconv.Itoa(id)
-	fi.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
+	userTime, err := userLocalTime(db, uploadDateTime, username)
+	if err != nil {
+		return DownloadFileInfo{}, err
+	}
+	fi.UploadDate = userTime.Format("2006-01-02 15:04:05")
 	fi.FilesizeMB = fmt.Sprintf("%.6f", float64(filesizeBytes)/1024/1024) + " MB"
 
 	return fi, nil
 }
 
 // FormatedFilesInfo returns array of formatted file information
-func FormatedFilesInfo(db *sql.DB, query string, args ...interface{}) ([]FileInfo, error) {
+func FormatedFilesInfo(username string, db *sql.DB, query string, args ...interface{}) ([]FileInfo, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return []FileInfo{}, nil
@@ -93,7 +118,11 @@ func FormatedFilesInfo(db *sql.DB, query string, args ...interface{}) ([]FileInf
 		if err != nil {
 			return []FileInfo{}, err
 		}
-		fiTable.UploadDate = uploadDateTime.Format("2006-01-02 15:04:05")
+		userTime, err := userLocalTime(db, uploadDateTime, username)
+		if err != nil {
+			return []FileInfo{}, err
+		}
+		fiTable.UploadDate = userTime.Format("2006-01-02 15:04:05")
 
 		if len(fiTable.LabelComment) > filenameLen {
 			fiTable.Label = fiTable.LabelComment[:filenameLen] + "..."

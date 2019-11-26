@@ -83,7 +83,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	// getting files info for current page
-	fiCollection, err := database.FormatedFilesInfo(db, selectFileInfo, category, (numPage-1)*15, numPage*15)
+	fiCollection, err := database.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*15, numPage*15)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return

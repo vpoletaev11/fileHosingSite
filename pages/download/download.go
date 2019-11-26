@@ -59,7 +59,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		case "GET":
 			fileID := r.URL.Query().Get("id")
 
-			fi, err := database.FormatedDownloadFileInfo(db, fileInfoDB, fileID)
+			fi, err := database.FormatedDownloadFileInfo(username, db, fileInfoDB, fileID)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -130,10 +131,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 }
 
 func timezoneValidator(timezone string) error {
-	if timezone == "empty" {
+	switch {
+	case timezone == "empty":
 		return fmt.Errorf("Please set your timezone")
-	}
-	if timezone == "" {
+
+	case timezone == "":
 		return fmt.Errorf("Incorrect timezone")
 	}
 
@@ -146,41 +148,38 @@ func timezoneValidator(timezone string) error {
 }
 
 func usernameValidator(username string) error {
-	if len(username) == 0 {
+	switch {
+	case len(username) == 0:
 		return fmt.Errorf("Username cannot be empty")
-	}
 
-	if len(username) > maxUsernameLen {
-		return fmt.Errorf("Username cannot be longer than 20 characters")
-	}
+	case len(username) > maxUsernameLen:
+		return fmt.Errorf("Username cannot be longer than " + strconv.Itoa(maxUsernameLen) + " characters")
 
-	// handling case when username is non-lowercase
-	if username != strings.ToLower(username) {
+	case username != strings.ToLower(username):
 		return fmt.Errorf("Please use lower case username")
 	}
+
 	return nil
 }
 
 func passwordsValidator(password1, password2 string) error {
-	if len(password1) == 0 {
+	switch {
+	case len(password1) == 0:
 		return fmt.Errorf("Password cannot be empty")
-	}
 
-	if len(password2) == 0 {
+	case len(password2) == 0:
 		return fmt.Errorf("Password cannot be empty")
-	}
 
-	if len(password1) > maxPasswordLen {
-		return fmt.Errorf("Password cannot be longer than 20 characters")
-	}
+	case len(password1) > maxPasswordLen:
+		return fmt.Errorf("Password cannot be longer than " + strconv.Itoa(maxPasswordLen) + " characters")
 
-	if len(password2) > maxPasswordLen {
-		return fmt.Errorf("Password cannot be longer than 20 characters")
-	}
+	case len(password2) > maxPasswordLen:
+		return fmt.Errorf("Password cannot be longer than " + strconv.Itoa(maxPasswordLen) + " characters")
 
-	if password1 != password2 {
+	case password1 != password2:
 		return fmt.Errorf("Passwords doesn't match")
 	}
+
 	return nil
 }
 

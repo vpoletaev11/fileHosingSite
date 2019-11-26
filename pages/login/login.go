@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/vpoletaev11/fileHostingSite/cookie"
@@ -139,29 +140,29 @@ func Page(db *sql.DB) http.HandlerFunc {
 }
 
 func passwordValidator(password string) error {
-	if password == "" {
+	switch {
+	case password == "":
 		return fmt.Errorf("Password cannot be empty")
+
+	case len(password) > maxPasswordLen:
+		return fmt.Errorf("Password cannot be longer than " + strconv.Itoa(maxPasswordLen) + " characters")
 	}
 
-	if len(password) > maxPasswordLen {
-		return fmt.Errorf("Password cannot be longer than 20 characters")
-	}
 	return nil
 }
 
 func usernameValidator(username string) error {
-	if username == "" {
+	switch {
+	case username == "":
 		return fmt.Errorf("Username cannot be empty")
-	}
 
-	if len(username) > maxUsernameLen {
-		return fmt.Errorf("Username cannot be longer than 20 characters")
-	}
+	case len(username) > maxUsernameLen:
+		return fmt.Errorf("Username cannot be longer than " + strconv.Itoa(maxUsernameLen) + " characters")
 
-	// handling case when username is non-lowercase
-	if username != strings.ToLower(username) {
+	case username != strings.ToLower(username):
 		return fmt.Errorf("Please use lower case username")
 	}
+
 	return nil
 }
 

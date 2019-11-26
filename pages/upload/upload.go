@@ -141,15 +141,14 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 func fileInfoValidator(filesize int64, filename, description, category string) error {
 	// handling of case when filesize more than 1GB
-	if filesize > maxFilesize {
+	switch {
+	case filesize > maxFilesize:
 		return fmt.Errorf("Filesize cannot be more than 1GB")
-	}
 
-	if len(filename) > maxFilenameLen {
+	case len(filename) > maxFilenameLen:
 		return fmt.Errorf("Filename are too long")
-	}
 
-	if len(description) > maxDescriptionLen {
+	case len(description) > maxDescriptionLen:
 		return fmt.Errorf("Description are too long")
 	}
 
@@ -158,5 +157,6 @@ func fileInfoValidator(filesize int64, filename, description, category string) e
 	default:
 		return fmt.Errorf("Unknown category")
 	}
+
 	return nil
 }

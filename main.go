@@ -9,6 +9,7 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/cookie"
 	"github.com/vpoletaev11/fileHostingSite/pages/admin"
 	"github.com/vpoletaev11/fileHostingSite/pages/categories"
+	"github.com/vpoletaev11/fileHostingSite/pages/cookiescleaner"
 	"github.com/vpoletaev11/fileHostingSite/pages/download"
 	"github.com/vpoletaev11/fileHostingSite/pages/index"
 	"github.com/vpoletaev11/fileHostingSite/pages/login"
@@ -63,6 +64,9 @@ func main() {
 
 	// admin page handler
 	http.HandleFunc("/admin", cookie.AdminAuthWrapper(admin.Page, db))
+
+	// cookie cleaner page handler, that accepting POST request and delete cookies
+	http.HandleFunc("/cookiescleaner", cookiescleaner.Page(db))
 
 	fmt.Println("starting server at :8080")
 	http.ListenAndServe(":8080", nil)

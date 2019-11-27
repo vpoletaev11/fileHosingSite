@@ -9,7 +9,7 @@ import (
 
 const (
 	filenameLen    = 20
-	descriptionLen = 25
+	descriptionLen = 35
 )
 
 const (

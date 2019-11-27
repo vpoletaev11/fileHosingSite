@@ -97,7 +97,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	if pagesCount == 1 {
-		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection})
+		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, Title: r.URL.Path[len("/categories/"):]})
 		if err != nil {
 			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 			return
@@ -107,7 +107,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 	// creating navigation bar if count of pages > 1
 	numsLinks := navigationBar(pagesCount, numPage, category)
-	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, LinkList: numsLinks})
+	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, LinkList: numsLinks, Title: r.URL.Path[len("/categories/"):]})
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
@@ -134,6 +134,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 			anyCategoryPageHandler(db, username, w, r)
+			return
 		}
 	}
 }

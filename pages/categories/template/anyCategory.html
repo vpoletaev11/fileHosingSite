@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>File Hosting</title>
+    <title>{{ .Title}}</title>
     <link rel="stylesheet" href="/assets/css/anyCategory.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -26,7 +26,6 @@
                             <th>Filesize</th>
                             <th>Description</th>
                             <th>Owner</th>
-                            <th>Category</th>
                             <th>Upload date</th>
                             <th>Rating</th>
                         </tr>
@@ -36,7 +35,6 @@
                             <td width="10%" title={{ .FilesizeBytesComment}}>{{ .FilesizeMb}}</td>
                             <td width="25%" title={{ .DescriptionComment}}>{{ .Description}}</td>
                             <td width="15%">{{ .Owner}}</td>
-                            <td width="10%">{{ .Category}}</td>
                             <td width="15%">{{ .UploadDate}}</td>
                             <td width="10%">{{ .Rating}}</td>
                         </tr>

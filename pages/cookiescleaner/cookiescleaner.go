@@ -14,13 +14,13 @@ import (
 const (
 	deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
 
-	selectPass = "SELECT password FROM users WHERE username = ?;"
+	selectPassandTimezone = "SELECT password, timezone FROM users WHERE username = ?;"
 )
 
 const cookieLifetime = 30 * time.Minute
 
 type reqKey struct {
-	Login    string `json:"login"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -31,37 +31,64 @@ func Page(db *sql.DB) http.HandlerFunc {
 		case "POST":
 			key := reqKey{}
 			err := json.NewDecoder(r.Body).Decode(&key)
-			if key.Login != "admin" {
+			if key.Username != "admin" {
 				fmt.Fprintln(w, "Wrong username or password")
 				return
 			}
 
 			password := ""
-			err = db.QueryRow(selectPass, key.Login).Scan(&password)
+			timezone := ""
+			err = db.QueryRow(selectPassandTimezone, key.Username).Scan(&password, &timezone)
 			if err != nil {
 				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
 				return
 			}
+
 			err = comparePasswords(password, key.Password)
 			if err != nil {
 				fmt.Fprintln(w, "Wrong username or password")
 				return
 			}
 
-			res, err := db.Exec(deleteOldSessions, time.Now().Add(-cookieLifetime).Format("2006-01-02 15:04:05"))
+			cookiesDeleted, err := deleteCookies(db)
+			if err != nil {
+				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
+				return
+			}
+			deletedAt, err := deletedAt(db, key.Username, timezone)
 			if err != nil {
 				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
 				return
 			}
 
-			cookiesDeleted, err := res.RowsAffected()
-			if err != nil {
-				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
-				return
-			}
-			fmt.Fprintln(w, "deleted", cookiesDeleted, "cookies")
+			fmt.Fprintln(w, "deleted", cookiesDeleted, "cookies at:", deletedAt)
 		}
 	}
+}
+
+// deleteCookies deletes expired cookies and returns deleted cookies count
+func deleteCookies(db *sql.DB) (cookiesDeleted int64, err error) {
+	res, err := db.Exec(deleteOldSessions, time.Now().Add(-cookieLifetime).Format("2006-01-02 15:04:05"))
+	if err != nil {
+		return 0, err
+	}
+
+	cookiesDeleted, err = res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return cookiesDeleted, nil
+}
+
+// deletedAt returns localized time for user when cookies was deleted
+func deletedAt(db *sql.DB, username, timezone string) (deletedAt string, err error) {
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		return "", err
+	}
+
+	return time.Now().In(location).Format("2006-01-02 15:04:05"), nil
 }
 
 // ComparePasswords compare hashed password with plain.

@@ -1,3 +1,6 @@
+// To send post request on this page use ./deleteCookieBackend.sh. [You may probably need to reconfigure script]
+// Script should be executable. To make this use: chmod +x deleteCookieBackend.sh
+
 package cookiescleaner
 
 import (

@@ -14,6 +14,7 @@ const deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
 
 const cookieLifetime = 30 * time.Minute
 
+// TemplateAdmin contains data for admin[/admin] page template
 type TemplateAdmin struct {
 	Warning template.HTML
 }

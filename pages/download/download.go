@@ -3,17 +3,18 @@ package download
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/vpoletaev11/fileHostingSite/tmp"
 
 	"github.com/vpoletaev11/fileHostingSite/database"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// absolute path to download[/download] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/download/template/download.html"
+// path to download[/download] template file
+const pathTemplateDownload = "pages/download/template/download.html"
 
 const (
 	fileInfoDB = "SELECT * FROM files WHERE id = ?;"
@@ -50,7 +51,7 @@ type TemplateDownload struct {
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateDownload)
 		if err != nil {
 			errhand.InternalError("download", "Page", username, err, w)
 			return

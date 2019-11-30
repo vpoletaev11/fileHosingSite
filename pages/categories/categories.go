@@ -9,14 +9,15 @@ import (
 
 	"github.com/vpoletaev11/fileHostingSite/database"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
+	"github.com/vpoletaev11/fileHostingSite/tmp"
 )
 
 const (
-	// absolute path to categories[/categories/] template file
-	absPathTemplateCategories = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/categories.html"
+	//  path to categories[/categories/] template file
+	pathTemplateCategories = "pages/categories/template/categories.html"
 
-	// absolute path to any category[/categories/*any category*] template file
-	absPathTemplateAnyCategory = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/categories/template/anyCategory.html"
+	//  path to any category[/categories/*any category*] template file
+	pathTemplateAnyCategory = "pages/categories/template/anyCategory.html"
 )
 
 const (
@@ -53,6 +54,12 @@ type numLink struct {
 
 // anyCategoryPageHandler handling any category[/categories/*any category*] page
 func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
+	page, err := tmp.CreateTemplate(pathTemplateAnyCategory)
+	if err != nil {
+		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		return
+	}
+
 	// getting category
 	link := r.URL.Path[len("/categories/"):]
 	switch link {
@@ -89,13 +96,6 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 		return
 	}
 
-	// creating template for current page
-	page, err := template.ParseFiles(absPathTemplateAnyCategory)
-	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
-		return
-	}
-
 	if pagesCount == 1 {
 		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, Title: r.URL.Path[len("/categories/"):]})
 		if err != nil {
@@ -119,7 +119,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page
-		page, err := template.ParseFiles(absPathTemplateCategories)
+		page, err := tmp.CreateTemplate(pathTemplateCategories)
 		if err != nil {
 			errhand.InternalError("categories", "Page", username, err, w)
 			return

@@ -10,11 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// absolute path to upload[/upload] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/upload/template/upload.html"
+// path to upload[/upload] template file
+const pathTemplateUpload = "pages/upload/template/upload.html"
 
 const (
 	sendFileInfoToDB = "INSERT INTO files (label, filesizeBytes, description, owner, category, uploadDate) VALUES (?, ?, ?, ?, ?, ?);"
@@ -57,7 +59,7 @@ func (pt *PassThru) Read(p []byte) (int, error) {
 // Page returns HandleFunc for upload[/upload] file page
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateUpload)
 		if err != nil {
 			errhand.InternalError("upload", "Page", username, err, w)
 			return

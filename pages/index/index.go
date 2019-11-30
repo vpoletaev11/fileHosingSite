@@ -5,13 +5,15 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/database"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-//  absolute path to index[/index] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/index/template/index.html"
+// path to index[/index] template file
+const pathTemplateIndex = "pages/index/template/index.html"
 
 const selectFileInfo = "SELECT * FROM files ORDER BY uploadDate DESC LIMIT 15;"
 
@@ -26,7 +28,7 @@ type TemplateIndex struct {
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateIndex)
 		if err != nil {
 			errhand.InternalError("index", "Page", username, err, w)
 			return

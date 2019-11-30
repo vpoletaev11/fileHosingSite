@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
@@ -19,13 +21,13 @@ type TemplateAdmin struct {
 	Warning template.HTML
 }
 
-//  absolute path to admin[/admin] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/admin/template/admin.html"
+//  path to admin[/admin] template file
+const pathTemplateAdmin = "pages/admin/template/admin.html"
 
 // Page returns HandleFunc for admin[/admin] page
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateAdmin)
 		if err != nil {
 			errhand.InternalError("index", "Page", "admin", err, w)
 			return

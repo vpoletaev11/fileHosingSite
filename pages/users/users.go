@@ -5,11 +5,13 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
-// absolute path to users[/users] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/users/template/users.html"
+// path to users[/users] template file
+const pathTemplateUsers = "pages/users/template/users.html"
 
 const selectUsers = "SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15;"
 
@@ -30,7 +32,7 @@ type UserInfo struct {
 func Page(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateUsers)
 		if err != nil {
 			errhand.InternalError("users", "Page", username, err, w)
 			return

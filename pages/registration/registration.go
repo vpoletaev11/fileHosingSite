@@ -9,12 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// absolute path to registration[/registration] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/registration/template/register.html"
+// path to registration[/registration] template file
+const pathTemplateRegistration = "pages/registration/template/register.html"
 
 const createUser = "INSERT INTO users(username, password, timezone) VALUES(?, ?, ?);"
 
@@ -32,7 +34,7 @@ type TemplateReg struct {
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for register page
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateRegistration)
 		if err != nil {
 			errhand.InternalError("registration", "Page", "", err, w)
 			return

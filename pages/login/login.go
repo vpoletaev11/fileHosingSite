@@ -8,13 +8,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vpoletaev11/fileHostingSite/tmp"
+
 	"github.com/vpoletaev11/fileHostingSite/cookie"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// absolute path to login[/login] template file
-const absPathTemplate = "/home/perdator/go/src/github.com/vpoletaev11/fileHostingSite/pages/login/template/login.html"
+// path to login[/login] template file
+const pathTemplateLogin = "pages/login/template/login.html"
 
 const (
 	selectPass = "SELECT password FROM users WHERE username = ?;"
@@ -36,7 +38,7 @@ type TemplateLog struct {
 func Page(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for login page
-		page, err := template.ParseFiles(absPathTemplate)
+		page, err := tmp.CreateTemplate(pathTemplateLogin)
 		if err != nil {
 			errhand.InternalError("login", "Page", "", err, w)
 			return

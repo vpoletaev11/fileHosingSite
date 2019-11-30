@@ -48,6 +48,14 @@ func (a anyTime) Match(v driver.Value) bool {
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	if dir != "" {
+		fmt.Println(dir)
+		return
+	}
 	sut := Page(nil)
 
 	w := httptest.NewRecorder()
@@ -67,7 +75,7 @@ func TestPageSuccessGET(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -125,8 +133,8 @@ func TestPageSuccessPOST(t *testing.T) {
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
-	oldName := absPathTemplate
-	newName := absPathTemplate + "edit"
+	oldName := pathTemplateLogin
+	newName := pathTemplateLogin + "edit"
 	err := os.Rename(oldName, newName)
 	require.NoError(t, err)
 	lenOrigName := len(oldName)

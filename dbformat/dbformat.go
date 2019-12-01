@@ -1,4 +1,4 @@
-package database
+package dbformat
 
 import (
 	"database/sql"

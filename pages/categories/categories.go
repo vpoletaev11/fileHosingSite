@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/vpoletaev11/fileHostingSite/database"
+	"github.com/vpoletaev11/fileHostingSite/dbformat"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 )
@@ -43,7 +43,7 @@ type TemplateAnyCategory struct {
 	Username      string
 	Title         string
 	LinkList      []numLink
-	UploadedFiles []database.FileInfo
+	UploadedFiles []dbformat.FileInfo
 }
 
 // numLink contains relations of page number and page link
@@ -90,7 +90,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	// getting files info for current page
-	fiCollection, err := database.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*15, numPage*15)
+	fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*15, numPage*15)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return

@@ -5,9 +5,8 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/vpoletaev11/fileHostingSite/dbformat"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
-
-	"github.com/vpoletaev11/fileHostingSite/database"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
@@ -21,7 +20,7 @@ const selectFileInfo = "SELECT * FROM files ORDER BY rating DESC LIMIT 15;"
 type TemplatePopular struct {
 	Warning       template.HTML
 	Username      string
-	UploadedFiles []database.FileInfo
+	UploadedFiles []dbformat.FileInfo
 }
 
 // Page returns HandleFunc for popular[/popular] page
@@ -35,7 +34,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		}
 		switch r.Method {
 		case "GET":
-			fiCollection, err := database.FormatedFilesInfo(username, db, selectFileInfo)
+			fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo)
 			if err != nil {
 				errhand.InternalError("popular", "Page", username, err, w)
 				return

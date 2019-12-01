@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vpoletaev11/fileHostingSite/dbformat"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
-	"github.com/vpoletaev11/fileHostingSite/database"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
 
@@ -44,7 +44,7 @@ const (
 // TemplateDownload data for download[/download] page template
 type TemplateDownload struct {
 	Username string
-	FileInfo database.DownloadFileInfo
+	FileInfo dbformat.DownloadFileInfo
 }
 
 // Page returns HandleFunc for download[/download] page
@@ -60,7 +60,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 		case "GET":
 			fileID := r.URL.Query().Get("id")
 
-			fi, err := database.FormatedDownloadFileInfo(username, db, fileInfoDB, fileID)
+			fi, err := dbformat.FormatedDownloadFileInfo(username, db, fileInfoDB, fileID)
 			if err != nil {
 				errhand.InternalError("download", "Page", username, err, w)
 				return

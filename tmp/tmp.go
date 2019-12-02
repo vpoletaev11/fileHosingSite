@@ -2,21 +2,40 @@ package tmp
 
 import (
 	"html/template"
+	"os"
 	"path/filepath"
 )
 
 // CreateTemplate creates template from inputted template file path
 func CreateTemplate(path string) (*template.Template, error) {
-	// creating absolute filepath for template file
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
+	//
+	for i := 0; i < 10; i++ {
+		// getting current working directory
+		abspath, err := filepath.Abs("")
+		if err != nil {
+			return nil, err
+		}
 
-	// creating template for current page
-	page, err := template.ParseFiles(path)
-	if err != nil {
-		return nil, err
+		switch {
+		// if working directory != root (when runned tests)
+		case filepath.Base(abspath) != "fileHostingSite":
+			err := os.Chdir("..")
+			if err != nil {
+				return nil, err
+			}
+
+		// if working directory == root (usual running of program)
+		case filepath.Base(abspath) == "fileHostingSite":
+			abspath = filepath.Join(abspath, path)
+			page, err := template.ParseFiles(abspath)
+			if err != nil {
+				return nil, err
+			}
+			return page, nil
+
+		default:
+			break
+		}
 	}
-	return page, nil
+	return nil, nil
 }

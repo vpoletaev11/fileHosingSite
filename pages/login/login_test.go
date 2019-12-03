@@ -133,8 +133,8 @@ func TestPageSuccessPOST(t *testing.T) {
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
-	oldName := pathTemplateLogin
-	newName := pathTemplateLogin + "edit"
+	oldName := "../../" + pathTemplateLogin
+	newName := "../../" + pathTemplateLogin + "edit"
 	err := os.Rename(oldName, newName)
 	require.NoError(t, err)
 	lenOrigName := len(oldName)
@@ -187,7 +187,7 @@ func TestPageEmptyUsername(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -225,7 +225,7 @@ func TestPageEmptyPassword(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -263,7 +263,7 @@ func TestPageLargerUsername(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -283,7 +283,7 @@ func TestPageLargerUsername(t *testing.T) {
 func TestPageLargerPassword(t *testing.T) {
 	data := url.Values{}
 	data.Set("username", "example")
-	data.Add("password", "example_larger_than_20_characters")
+	data.Add("password", "password_larger_than_40_characters____________________")
 
 	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
 	require.NoError(t, err)
@@ -301,7 +301,7 @@ func TestPageLargerPassword(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -311,7 +311,7 @@ func TestPageLargerPassword(t *testing.T) {
             <p>Password: <input required type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
-            <h2 style="color:red">Password cannot be longer than 20 characters</h2>
+            <h2 style="color:red">Password cannot be longer than 40 characters</h2>
         </form>
     </div>
 </body>`, bodyString)
@@ -339,7 +339,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -387,7 +387,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -435,7 +435,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -483,7 +483,7 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>
@@ -532,7 +532,7 @@ func TestPageQueryEXECErr(t *testing.T) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>login</title>
+    <title>Login</title>
     <link rel="stylesheet" href="assets/css/login.css">
 <head>
 <body bgcolor=#f1ded3>

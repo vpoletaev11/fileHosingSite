@@ -85,8 +85,17 @@ func Page(db *sql.DB) http.HandlerFunc {
 			hashPassDB := ""
 			err = db.QueryRow(selectPass, username).Scan(&hashPassDB)
 			if err != nil {
+				if err.Error() == "sql: no rows in result set" {
+					templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
+					err := page.Execute(w, templateData)
+					if err != nil {
+						errhand.InternalError("registration", "Page", "", err, w)
+						return
+					}
+					return
+				}
 				w.WriteHeader(500)
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
+				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
 					errhand.InternalError("registration", "Page", "", err, w)

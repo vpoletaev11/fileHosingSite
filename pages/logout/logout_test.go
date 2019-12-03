@@ -69,7 +69,7 @@ func TestDBError(t *testing.T) {
 	bodyBytes, err := ioutil.ReadAll(w.Body)
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
-	assert.Equal(t, "DB Error\n", bodyString)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
 }
 
 // TestNoCookie checks workability of error handler for cookie handler

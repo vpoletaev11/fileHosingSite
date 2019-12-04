@@ -44,6 +44,18 @@ func (a anyTime) Match(v driver.Value) bool {
 	return true
 }
 
+func testHandler(db *sql.DB, username string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, username)
+	}
+}
+
+func testAdminHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "test done")
+	}
+}
+
 func TestCreateCookie(t *testing.T) {
 	cookie1 := CreateCookie()
 	cookie2 := CreateCookie()
@@ -176,12 +188,6 @@ func TestCookieValidatorCookieExpiredErrorDB(t *testing.T) {
 	assert.Equal(t, "testing error", err.Error())
 }
 
-func testHandler(db *sql.DB, username string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, username)
-	}
-}
-
 func TestAuthWrapperSuccess(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -296,6 +302,165 @@ func TestAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
 	r.AddCookie(inHandlerCookie)
 
 	sut := AuthWrapper(testHandler, db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
+}
+
+func TestAdminAuthWrapperSuccess(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "admin"))
+	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/admin", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AdminAuthWrapper(testAdminHandler, db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "test done", bodyString)
+}
+
+func TestAdminAuthWrapperValidatorError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WillReturnError(fmt.Errorf("testing error"))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/admin", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AdminAuthWrapper(testAdminHandler, db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
+}
+
+func TestAdminAuthWrapperEmptyUsename(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), ""))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/admin", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AdminAuthWrapper(testAdminHandler, db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "/login", w.Header().Get("Location"))
+	assert.Equal(t, "", bodyString)
+}
+
+func TestAdminAuthWrapperNonAdminUsername(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/admin", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AdminAuthWrapper(testAdminHandler, db)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "", bodyString)
+
+	assert.Equal(t, "/", w.Header().Get("Location"))
+}
+
+func TestAdminAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	rows := []string{"expires", "username"}
+	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "admin"))
+	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnError(fmt.Errorf("testing error"))
+
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/admin", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+
+	inHandlerCookie := &http.Cookie{
+		Name:  "session_id",
+		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+	}
+
+	r.AddCookie(inHandlerCookie)
+
+	sut := AdminAuthWrapper(testAdminHandler, db)
 
 	sut(w, r)
 

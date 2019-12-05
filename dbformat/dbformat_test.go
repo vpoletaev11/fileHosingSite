@@ -10,6 +10,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUserLocalTimeSuccess(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
+
+	tm, err := userLocalTime(db, time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC), "example")
+	require.NoError(t, err)
+
+	location, err := time.LoadLocation("Europe/Moscow")
+	require.NoError(t, err)
+
+	assert.Equal(t, time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC).In(location), tm)
+}
+
+func TestUserLocalUserLocationError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Unknown/location"))
+
+	tm, err := userLocalTime(db, time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC), "example")
+
+	if err != nil {
+	} else {
+		t.Errorf("Unknown timezone not recognized as error")
+	}
+	assert.Equal(t, time.Time{}, tm)
+}
+
 func TestDownloadFileInfoSuccess(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)

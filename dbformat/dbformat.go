@@ -95,7 +95,7 @@ func FormatedDownloadFileInfo(username string, db *sql.DB, query, argument strin
 func FormatedFilesInfo(username string, db *sql.DB, query string, args ...interface{}) ([]FileInfo, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		return []FileInfo{}, nil
+		return []FileInfo{}, err
 	}
 	defer rows.Close()
 

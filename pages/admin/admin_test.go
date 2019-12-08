@@ -89,8 +89,8 @@ func TestPageSuccessPOST(t *testing.T) {
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
-	oldName := absPathTemplate
-	newName := absPathTemplate + "edit"
+	oldName := "../../" + pathTemplateAdmin
+	newName := "../../" + pathTemplateAdmin + "edit"
 	err := os.Rename(oldName, newName)
 	require.NoError(t, err)
 	lenOrigName := len(oldName)

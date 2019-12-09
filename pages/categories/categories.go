@@ -90,7 +90,7 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	// getting files info for current page
-	fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*15, numPage*15)
+	fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*rowsInPage, numPage*rowsInPage)
 	if err != nil {
 		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
 		return
@@ -185,13 +185,13 @@ func navigationBar(pagesCount, numPage int, category string) []numLink {
 				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 			}
 		case numPage >= pagesCount-15:
-			for i := numPage - 5; i <= pagesCount-2; i++ {
+			for i := numPage - 5; i <= pagesCount-1; i++ {
 				pageNum := strconv.Itoa(i)
 				link := "/categories/" + category + "?p=" + pageNum
 				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})
 			}
 		default:
-			for i := numPage - 5; i <= numPage+20; i++ {
+			for i := numPage - 5; i <= numPage+15; i++ {
 				pageNum := strconv.Itoa(i)
 				link := "/categories/" + category + "?p=" + pageNum
 				numsLinks = append(numsLinks, numLink{NumPage: i, Link: link})

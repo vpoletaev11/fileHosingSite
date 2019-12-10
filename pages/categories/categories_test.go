@@ -1,10 +1,12 @@
 package categories
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -679,4 +681,173 @@ func TestPageAnyCategoryAlotPagesNumPage1Success(t *testing.T) {
         
     </div>
 </body>`, bodyString)
+}
+
+// TestPageMissingTemplate tests case when template file is missing.
+// Cannot be runned in parallel.
+func TestPageMissingTemplate(t *testing.T) {
+	// renaming exists template file
+	oldName := "../../" + pathTemplateAnyCategory
+	newName := "../../" + pathTemplateAnyCategory + "edit"
+	err := os.Rename(oldName, newName)
+	require.NoError(t, err)
+	lenOrigName := len(oldName)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
+	require.NoError(t, err)
+
+	// running of the page handler with un-exists template file
+	sut := Page(nil, "username")
+	sut(w, r)
+
+	assert.Equal(t, 500, w.Code)
+
+	// renaming template file to original filename
+	defer func() {
+		// renaming template file to original filename
+		oldName = newName
+		newName = oldName[:lenOrigName]
+		err = os.Rename(oldName, newName)
+		require.NoError(t, err)
+	}()
+
+	// checking error handler works correct
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageAnyCategoryWrongCategory(t *testing.T) {
+	sut := Page(nil, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/wrongCategory", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	t.Log(bodyString)
+	assert.Equal(t, "ERROR: Incorrect category\n", bodyString)
+}
+
+func TestPageAnyCategoryPagesCountError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+	err = sqlMock.ExpectationsWereMet()
+	require.NoError(t, err)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageAnyCategoryWrongPage(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"count"}
+	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=wrongPage", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+	err = sqlMock.ExpectationsWereMet()
+	require.NoError(t, err)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+}
+
+func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"count"}
+	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=-1", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+	err = sqlMock.ExpectationsWereMet()
+	require.NoError(t, err)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+}
+
+func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"count"}
+	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=100", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+	err = sqlMock.ExpectationsWereMet()
+	require.NoError(t, err)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+}
+
+func TestPageAnyCategorySuccessFileInfoGatheringError(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	row := []string{"count"}
+	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
+
+	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE category =").WithArgs("other", 0, 15).WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+	err = sqlMock.ExpectationsWereMet()
+	require.NoError(t, err)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	require.NoError(t, err)
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
 }

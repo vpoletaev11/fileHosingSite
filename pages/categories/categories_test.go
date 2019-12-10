@@ -157,7 +157,7 @@ func TestPageAnyCategorySuccessGET(t *testing.T) {
 </body>`, bodyString)
 }
 
-func TestPageAnyCategoryFewPagesSuccess(t *testing.T) {
+func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 	row := []string{"count"}
@@ -258,7 +258,7 @@ func TestPageAnyCategoryFewPagesSuccess(t *testing.T) {
 </body>`, bodyString)
 }
 
-func TestPageAnyCategoryAlotPagesSuccess(t *testing.T) {
+func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 	row := []string{"count"}
@@ -405,7 +405,7 @@ func TestPageAnyCategoryAlotPagesSuccess(t *testing.T) {
 </body>`, bodyString)
 }
 
-func TestPageAnyCategoryAlotPagesNumPage16Success(t *testing.T) {
+func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 	row := []string{"count"}
@@ -542,7 +542,7 @@ func TestPageAnyCategoryAlotPagesNumPage16Success(t *testing.T) {
 </body>`, bodyString)
 }
 
-func TestPageAnyCategoryAlotPagesNumPage1Success(t *testing.T) {
+func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 	row := []string{"count"}

@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -54,7 +53,6 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 			err = comparePasswords(password, key.Password)
 			if err != nil {
-				log.Fatal(err)
 				fmt.Fprintln(w, "Wrong username or password")
 				return
 			}

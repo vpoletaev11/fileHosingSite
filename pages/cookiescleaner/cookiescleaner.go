@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 const (
 	deleteOldSessions = "DELETE FROM sessions WHERE expires <= ?;"
 
-	selectPassandTimezone = "SELECT password, timezone FROM users WHERE username = ?;"
+	selectPassAndTimezone = "SELECT password, timezone FROM users WHERE username = ?;"
 )
 
 const cookieLifetime = 30 * time.Minute
@@ -34,6 +35,10 @@ func Page(db *sql.DB) http.HandlerFunc {
 		case "POST":
 			key := reqKey{}
 			err := json.NewDecoder(r.Body).Decode(&key)
+			if err != nil {
+				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
+				return
+			}
 			if key.Username != "admin" {
 				fmt.Fprintln(w, "Wrong username or password")
 				return
@@ -41,7 +46,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 			password := ""
 			timezone := ""
-			err = db.QueryRow(selectPassandTimezone, key.Username).Scan(&password, &timezone)
+			err = db.QueryRow(selectPassAndTimezone, key.Username).Scan(&password, &timezone)
 			if err != nil {
 				errhand.InternalError("cookiescleaner", "Page", "admin", err, w)
 				return
@@ -49,6 +54,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 
 			err = comparePasswords(password, key.Password)
 			if err != nil {
+				log.Fatal(err)
 				fmt.Fprintln(w, "Wrong username or password")
 				return
 			}

@@ -89,7 +89,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 				return
 			}
 
-			id := r.RequestURI[len("/download?id="):]
+			id := r.URL.Query().Get("id")
 
 			alreadyRated, err := setRating(db, id, username, rating)
 			if err != nil {

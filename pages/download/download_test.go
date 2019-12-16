@@ -6,7 +6,10 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -126,6 +129,41 @@ func TestPageSuccessGET(t *testing.T) {
 </body>`, bodyString)
 }
 
+func TestPageSuccessPOST(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnRows(
+		sqlmock.NewRows([]string{
+			"owner",
+		}).AddRow(
+			"owner",
+		))
+	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(10, "owner").WillReturnResult(sqlmock.NewResult(1, 1))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "10")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "", bodyString)
+}
+
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
 	oldName := "../../" + pathTemplateDownload
@@ -135,7 +173,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	lenOrigName := len(oldName)
 
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/download?id=1", nil)
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
@@ -213,6 +251,194 @@ func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/download?id=1", nil)
 	require.NoError(t, err)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageIncorrectPOSTParameter01(t *testing.T) {
+	sut := Page(nil, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "wrongParameter")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+}
+
+func TestPageIncorrectPOSTParameter02(t *testing.T) {
+	sut := Page(nil, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "11")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+}
+
+func TestPageIncorrectPOSTParameter03(t *testing.T) {
+	sut := Page(nil, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "-11")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+}
+
+func TestPageSetRatingError01POST(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "10")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageSetRatingError02POST(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "10")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageSetRatingError03POST(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "10")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageSetRatingError04POST(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnRows(
+		sqlmock.NewRows([]string{
+			"owner",
+		}).AddRow(
+			"owner",
+		))
+	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(10, "owner").WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+
+	w := httptest.NewRecorder()
+
+	data := url.Values{}
+	data.Set("rating", "10")
+	r, err := http.NewRequest(http.MethodPost, "http://localhost/download?id=1", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
 	sut(w, r)
 

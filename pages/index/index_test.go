@@ -1,20 +1,49 @@
 package index
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGet(t *testing.T) {
-	sut := Page(nil, "")
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	fileInfoRows := []string{
+		"id",
+		"label",
+		"filesizeBytes",
+		"description",
+		"owner",
+		"category",
+		"uploadDate",
+		"rating",
+	}
+
+	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY uploadDate DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
+		1,
+		"label",
+		1024,
+		"description",
+		"owner",
+		"other",
+		time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC),
+		1000,
+	))
+	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
+
+	sut := Page(db, "username")
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -37,17 +66,45 @@ func TestPageSuccessGet(t *testing.T) {
     <div class="menu">
         <ul class="nav">
             <li><a href="/upload">Upload file</a></li>
-            <li><a href="#">Categories</a></li>
-            <li><a href="#">Most popular</a></li>
-            <li><a href="#">Users</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/popular">Most popular</a></li>
+            <li><a href="/users">Users</a></li>
             <li><a href="/logout">Logout</a></li>
         </ul>
-
     </div>
+    <div class="username">Welcome, username</div>
 
     <div class="label">
         <br><br><br><br><br>
         <p><h1>↓↓↓ NEWLY UPLOADED FILES ↓↓↓</h1></p>
+    </div>
+
+    <div class = "newlyUploadedBox">
+        <div class = "newlyUploadedContent">
+                <table border="1" width="100%" cellpadding="5">
+                    <tr>
+                        <th>Filename</th>
+                        <th>Filesize</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                        <th>Category</th>
+                        <th>Upload date</th>
+                        <th>Rating</th>
+                    </tr>
+                    
+                    <tr>
+                        <td width="15%" title=label><a href=/download?id&#61;1>label</a></td>
+                        <td width="10%" title=1024&#32;Bytes>0.0010 MB</td>
+                        <td width="25%" title=description>description</td>
+                        <td width="15%">owner</td>
+                        <td width="10%"><a href=/categories/other>other</a></td>
+                        <td width="15%">2009-11-17 23:34:58</td>
+                        <td width="10%">1000</td>
+                    </tr>
+                    
+                </table>
+            </ul>
+        </div>
     </div>
 </body>`, bodyString)
 }
@@ -56,8 +113,8 @@ func TestPageSuccessGet(t *testing.T) {
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
-	oldName := absPathTemplate
-	newName := absPathTemplate + "edit"
+	oldName := "../../" + pathTemplateIndex
+	newName := "../../" + pathTemplateIndex + "edit"
 	err := os.Rename(oldName, newName)
 	require.NoError(t, err)
 	lenOrigName := len(oldName)
@@ -85,5 +142,68 @@ func TestPageMissingTemplate(t *testing.T) {
 	bodyBytes, err := ioutil.ReadAll(w.Body)
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
-	assert.Equal(t, "Internal error. Page not found\n", bodyString)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageDBError01Get(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY uploadDate DESC LIMIT 15;").WithArgs().WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+}
+
+func TestPageDBError02Get(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	fileInfoRows := []string{
+		"id",
+		"label",
+		"filesizeBytes",
+		"description",
+		"owner",
+		"category",
+		"uploadDate",
+		"rating",
+	}
+
+	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY uploadDate DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
+		1,
+		"label",
+		1024,
+		"description",
+		"owner",
+		"other",
+		time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC),
+		1000,
+	))
+	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnError(fmt.Errorf("testing error"))
+
+	sut := Page(db, "username")
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
+	require.NoError(t, err)
+
+	sut(w, r)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
 }

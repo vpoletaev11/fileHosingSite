@@ -48,14 +48,6 @@ func (a anyTime) Match(v driver.Value) bool {
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	if dir != "" {
-		fmt.Println(dir)
-		return
-	}
 	sut := Page(nil)
 
 	w := httptest.NewRecorder()
@@ -451,6 +443,52 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 </body>`, bodyString)
 }
 
+func TestPagePassordNotFound(t *testing.T) {
+	db, sqlMock, err := sqlmock.New()
+	require.NoError(t, err)
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnError(fmt.Errorf("sql: no rows in result set"))
+
+	data := url.Values{}
+	data.Set("username", "example")
+	data.Add("password", "example")
+
+	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
+	require.NoError(t, err)
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	w := httptest.NewRecorder()
+
+	sut := Page(db)
+	sut(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="loginForm">
+        <form action="" method="post">
+            <p>Username: <input required type="text" name="username"></p>
+            <p>Password: <input required type="password" name="password"></p>
+            <input type="submit" value="Login">
+            <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
+            <h2 style="color:red">Wrong username or password</h2>
+        </form>
+    </div>
+</body>`, bodyString)
+}
+
 // TestPageComparePasswordsDoesntMatch tests case when comparePasswords() gets not matched password with hashed password and returns error
 func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
@@ -499,7 +537,6 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 </body>`, bodyString)
 }
 
-// TestPageQuerySelectErr tests case when SELECT query returns error
 func TestPageQueryEXECErr(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)

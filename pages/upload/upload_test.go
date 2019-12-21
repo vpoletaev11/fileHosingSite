@@ -2,6 +2,7 @@ package upload
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,62 +12,70 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestPageSuccessGET(t *testing.T) {
-// 	sut := Page(nil, "")
-// 	w := httptest.NewRecorder()
-// 	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
-// 	require.NoError(t, err)
+func TestPageSuccessGET(t *testing.T) {
+	sut := Page(nil, "username")
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
+	require.NoError(t, err)
 
-// 	sut(w, r)
+	sut(w, r)
 
-// 	bodyBytes, err := ioutil.ReadAll(w.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	bodyString := string(bodyBytes)
+	bodyBytes, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
 
-// 	assert.Equal(t, `<!doctype html>
-// <html lang="en">
-// <head>
-//     <meta charset="UTF-8">
-//     <title>Upload file</title>
-//     <link rel="stylesheet" href="assets/css/upload.css">
-// <head>
-// <body bgcolor=#f1ded3>
-//     <div class="goback">
-//         <a href="/"><h2>Go back</h2></a>
-//     </div>
+	assert.Equal(t, `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload file</title>
+    <link rel="stylesheet" href="assets/css/upload.css">
+<head>
+<body bgcolor=#f1ded3>
+    <div class="menu">
+        <ul class="nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/popular">Most popular</a></li>
+            <li><a href="/users">Users</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </div>
+    <div class="username">Welcome, username</div>
 
-//     <div class="uploadFormBox">
-//         <div class="uploadFormContent">
-//         <form action="/upload" method="post" enctype="multipart/form-data">
-//             <p>Filename: <input type="text" maxlength="50" name="filename"></p><br>
-//             <p>Input description for uploading file:</p>
-//             <textarea cols="80" rows="15" maxlength="500" name="description"></textarea>
+    <div class="uploadFormBox">
+        <div class="uploadFormContent">
+        <form action="" method="post" enctype="multipart/form-data">
+            <p>Filename: <input type="text" maxlength="50" name="filename"></p><br>
+            <p>Input description for uploading file:</p>
+            <textarea cols="80" rows="15" maxlength="500" name="description"></textarea>
+    
+            <p>Category: <select name="category">
+                <option selected="selected" value="other">other</option>
+                <option value="games">games</option>
+                <option value="documents">documents</option>
+                <option value="projects">projects</option>
+                <option value="music">music</option>
+                </select></p>
+                   
+            <p><input required type="file" name="uploaded_file"></input></p>
 
-//             <p>Category: <select name="category">
-//                 <option selected="selected" value="other">other</option>
-//                 <option value="games">games</option>
-//                 <option value="documents">documents</option>
-//                 <option value="projects">projects</option>
-//                 <option value="music">music</option>
-//                 </select></p>
-
-//             <p><input required type="file" name="uploaded_file"></input></p>
-
-//             <input type="submit" value="UPLOAD">
-//         </form>
-//         </div>
-//     </div>
-// </body>`, bodyString)
-// }
+            <p><input type="submit" value="UPLOAD"></p>
+            
+        </form>
+        </div>
+    </div>
+</body>`, bodyString)
+}
 
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
 	// renaming exists template file
-	oldName := absPathTemplate
-	newName := absPathTemplate + "edit"
+	oldName := "../../" + pathTemplateUpload
+	newName := "../../" + pathTemplateUpload + "edit"
 	err := os.Rename(oldName, newName)
 	require.NoError(t, err)
 	lenOrigName := len(oldName)
@@ -94,5 +103,5 @@ func TestPageMissingTemplate(t *testing.T) {
 	bodyBytes, err := ioutil.ReadAll(w.Body)
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Page not found\n", bodyString)
+	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
 }

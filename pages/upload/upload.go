@@ -105,14 +105,22 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// sending information about uploaded file to MySQL server
 			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
 			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				return
 			}
 
 			// getting id of uploaded file from exec
 			idInt, err := res.LastInsertId()
 			if err != nil {
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				return
 			}
 			id := strconv.FormatInt(idInt, 10)
@@ -126,7 +134,11 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			_, err = io.Copy(f, &PassThru{Reader: file})
 			if err != nil {
-				os.Remove(f.Name())
+				err := os.Remove(f.Name())
+				if err != nil {
+					errhand.InternalError("upload", "Page", username, err, w)
+					return
+				}
 				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1GB</h2>", Username: username})
 				return
 			}

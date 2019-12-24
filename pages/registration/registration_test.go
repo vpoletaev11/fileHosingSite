@@ -61,9 +61,9 @@ func TestPageSuccessGET(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -594,9 +594,9 @@ func TestPageEmptyUsername(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -1066,9 +1066,9 @@ func TestPageEmptyPassword1(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -1538,9 +1538,9 @@ func TestPageEmptyPassword2(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -2010,9 +2010,9 @@ func TestPageLargerUsername(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -2482,9 +2482,9 @@ func TestPageLargerPassword1(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -2954,9 +2954,9 @@ func TestPageLargerPassword2(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -3426,9 +3426,9 @@ func TestPageNonLowerCaseUsernam(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -3898,9 +3898,9 @@ func TestPageMismatchingPasswords(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -4375,9 +4375,9 @@ func TestPageNotUniqueUsername(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -4852,9 +4852,9 @@ func TestPageUsernameInsertionDBInternalError(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -5324,9 +5324,9 @@ func TestPageNonSelectedTimezoneError(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -5796,9 +5796,9 @@ func TestPageEmptyTimezoneError(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">
@@ -6268,9 +6268,9 @@ func TestPageWrongTimezoneError(t *testing.T) {
     <body bgcolor=#f1ded3>
         <div class="registerForm">
             <form action="" method="post">
-                <p>Create username: <input required type="text" name="username"></p>
-                <p>Create password: <input required type="password" name="password1"></p>
-                <p>Repeat password: <input required type="password" name="password2"></p>
+                <p>Create username: <input required maxlength="20" type="text" name="username"></p>
+                <p>Create password: <input required maxlength="40" type="password" name="password1"></p>
+                <p>Repeat password: <input required maxlength="40" type="password" name="password2"></p>
                 <p>Set Timezone: <select name="timezone">
                     <option value="empty">Choose timezone</option>
                     <optgroup label="Africa">

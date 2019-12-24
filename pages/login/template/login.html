@@ -8,8 +8,8 @@
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             {{ .Warning}}

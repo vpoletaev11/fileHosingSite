@@ -73,8 +73,8 @@ func TestPageSuccessGET(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             
@@ -185,8 +185,8 @@ func TestPageEmptyUsername(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Username cannot be empty</h2>
@@ -223,8 +223,8 @@ func TestPageEmptyPassword(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Password cannot be empty</h2>
@@ -261,8 +261,8 @@ func TestPageLargerUsername(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Username cannot be longer than 20 characters</h2>
@@ -299,8 +299,8 @@ func TestPageLargerPassword(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Password cannot be longer than 40 characters</h2>
@@ -337,8 +337,8 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Please use lower case username</h2>
@@ -385,8 +385,8 @@ func TestPageQuerySELECTErr(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">INTERNAL ERROR. Please try later</h2>
@@ -433,8 +433,8 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Wrong username or password</h2>
@@ -479,8 +479,8 @@ func TestPagePassordNotFound(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Wrong username or password</h2>
@@ -527,8 +527,8 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">Wrong username or password</h2>
@@ -575,8 +575,8 @@ func TestPageQueryEXECErr(t *testing.T) {
 <body bgcolor=#f1ded3>
     <div class="loginForm">
         <form action="" method="post">
-            <p>Username: <input required type="text" name="username"></p>
-            <p>Password: <input required type="password" name="password"></p>
+            <p>Username: <input required maxlength="20" type="text" name="username"></p>
+            <p>Password: <input required maxlength="40" type="password" name="password"></p>
             <input type="submit" value="Login">
             <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
             <h2 style="color:red">INTERNAL ERROR. Please try later</h2>

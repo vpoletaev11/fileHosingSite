@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
+	PRIMARY KEY(cookie, username),
 	username VARCHAR(20) NOT NULL,
 	cookie VARCHAR(60) NOT NULL,
 	expires DATETIME NOT NULL

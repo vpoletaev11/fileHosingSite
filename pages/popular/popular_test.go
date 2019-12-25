@@ -30,7 +30,7 @@ func TestPageSuccessGet(t *testing.T) {
 		"rating",
 	}
 
-	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
+	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE rating >0 ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
 		1,
 		"label",
 		1024,
@@ -145,7 +145,7 @@ func TestPageDBError01Get(t *testing.T) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 
-	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnError(fmt.Errorf("testing error"))
+	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE rating >0 ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnError(fmt.Errorf("testing error"))
 
 	sut := Page(db, "username")
 	w := httptest.NewRecorder()
@@ -177,7 +177,7 @@ func TestPageDBError02Get(t *testing.T) {
 		"rating",
 	}
 
-	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
+	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE rating >0 ORDER BY rating DESC LIMIT 15;").WithArgs().WillReturnRows(sqlmock.NewRows(fileInfoRows).AddRow(
 		1,
 		"label",
 		1024,

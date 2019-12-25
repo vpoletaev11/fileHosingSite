@@ -14,7 +14,7 @@ import (
 // path to popular[/popular] template file
 const pathTemplatePopular = "pages/popular/template/popular.html"
 
-const selectFileInfo = "SELECT * FROM files ORDER BY rating DESC LIMIT 15;"
+const selectFileInfo = "SELECT * FROM files WHERE rating >0 ORDER BY rating DESC LIMIT 15;"
 
 // TemplatePopular contains data for popular[/popular] page template
 type TemplatePopular struct {

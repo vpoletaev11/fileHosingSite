@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13
-    working_directory: /go/src/github.com/vpoletaaev11/fileHostingSite
+    working_directory: /go/src/github.com/vpoletaev11/fileHostingSite
     steps:
       - checkout
       - run:

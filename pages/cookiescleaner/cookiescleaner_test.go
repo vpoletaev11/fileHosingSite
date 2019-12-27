@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -54,7 +55,12 @@ func TestPageSuccessPOST(t *testing.T) {
 	require.NoError(t, err)
 	bodyString := string(bodyBytes)
 
-	assert.Equal(t, "deleted 1 cookies at: "+time.Now().Format("2006-01-02 15:04:05")+"\n", bodyString)
+	location, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, "deleted 1 cookies at: "+time.Now().In(location).Format("2006-01-02 15:04:05")+"\n", bodyString)
 }
 
 func TestPageSuccessJsonError(t *testing.T) {

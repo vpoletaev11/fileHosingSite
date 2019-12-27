@@ -1,5 +1,6 @@
 # File Hosting Site
-
+[![CircleCI](https://circleci.com/gh/vpoletaev11/fileHostingSite.svg?style=svg)](https://circleci.com/gh/vpoletaev11/fileHostingSite)
+[![Coverage Status](https://coveralls.io/repos/github/vpoletaev11/fileHostingSite/badge.svg?branch=master)](https://coveralls.io/github/vpoletaev11/fileHostingSite?branch=master)
 ### File hosting site intended for uploading/downloading files.<br>
 Uploaded files will have: filename, file size, description, owner, category, upload date, rating.<br>
 Site required that users should be registered.

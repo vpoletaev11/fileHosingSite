@@ -103,7 +103,12 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			// todo: timezone utc
 			// sending information about uploaded file to MySQL server
-			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().Format("2006-01-02 15:04:05"))
+			loc, err := time.LoadLocation("UTC")
+			if err != nil {
+				errhand.InternalError("upload", "Page", username, err, w)
+				return
+			}
+			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().In(loc).Format("2006-01-02 15:04:05"))
 			if err != nil {
 				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
 				if err != nil {

@@ -32,6 +32,6 @@ $ go run main.go
 ## Step 4: Build project
 
 ```shell
-$ go build.main.go
+$ go build main.go
 ```
 

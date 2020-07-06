@@ -22,7 +22,7 @@ import (
 
 func main() {
 	// connecting to mySQL database
-	db, err := sql.Open("mysql", "USERNAME:@tcp(localhost:3306)/fileHostingSite?parseTime=true") // ?parseTime=true asks the driver to scan DATE and DATETIME automatically to time.Time
+	db, err := sql.Open("mysql", "root:@tcp(mysql:3306)/fileHostingSite?parseTime=true") // ?parseTime=true asks the driver to scan DATE and DATETIME automatically to time.Time
 	if err != nil {
 		panic(err)
 	}

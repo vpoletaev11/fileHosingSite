@@ -6,7 +6,13 @@ Uploaded files will have: filename, file size, description, owner, category, upl
 Site required that users should be registered.
 
 
-# Project setup
+# Project setup via docker
+```shell
+$ git clone https://github.com/vpoletaev11/fileHostingSite
+$ cd fileHostingSite
+$ docker-compose up
+```
+# Default project setup
 ## Step 1: Clone project
 
 ```shell
@@ -23,9 +29,9 @@ $ go test ./...
 ## Step 3: Configure database
 
 ```shell
-$ mysql -u YOUR_MYSQL_USER < createDB.sql
+$ mysql -u YOUR_MYSQL_USER < init.sql
 $ YOUR_PREFERRED_REDACTOR main.go
-Find this code: USERNAME:@tcp(localhost:3306) and reconfigure it. 
+Find this code: root:@tcp(mysql:3306) and reconfigure it. 
 Syntax: username:password@connection_settings
 ```
 

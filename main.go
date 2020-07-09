@@ -32,40 +32,19 @@ func main() {
 	// creating file server handler for assets
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-	// creating file server handler for assets
+	// creating file server handler for files
 	http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("files"))))
 
-	// registration page handler
 	http.HandleFunc("/registration", registration.Page(db))
-
-	// login page handler
 	http.HandleFunc("/login", login.Page(db))
-
-	// index page handler
 	http.HandleFunc("/", cookie.AuthWrapper(index.Page, db))
-
-	// logout page handler
 	http.HandleFunc("/logout", logout.Page(db))
-
-	// upload file page handler
 	http.HandleFunc("/upload", cookie.AuthWrapper(upload.Page, db))
-
-	// categories page handler
 	http.HandleFunc("/categories/", cookie.AuthWrapper(categories.Page, db))
-
-	// download page handler
 	http.HandleFunc("/download", cookie.AuthWrapper(download.Page, db))
-
-	// popular page handler
 	http.HandleFunc("/popular", cookie.AuthWrapper(popular.Page, db))
-
-	// users page handler
 	http.HandleFunc("/users", cookie.AuthWrapper(users.Page, db))
-
-	// admin page handler
 	http.HandleFunc("/admin", cookie.AdminAuthWrapper(admin.Page, db))
-
-	// cookie cleaner page handler, that accepting POST request and delete cookies
 	http.HandleFunc("/cookiescleaner", cookiescleaner.Page(db))
 
 	fmt.Println("starting server at :8080")

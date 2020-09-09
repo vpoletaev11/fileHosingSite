@@ -6,11 +6,11 @@ ADD . /go/src/github.com/vpoletaev11/fileHostingSite
 
 # Build the project inside the container.
 # RUN GOOS=linux go build  .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o .
+RUN GOOS=linux go build .
 
 
 # Execute the binary
-FROM scratch
+FROM debian
 EXPOSE 8080
 
 COPY --from=builder /go/src/github.com/vpoletaev11/fileHostingSite   /

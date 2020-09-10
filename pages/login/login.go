@@ -20,8 +20,6 @@ const pathTemplateLogin = "pages/login/template/login.html"
 
 const (
 	selectPass = "SELECT password FROM users WHERE username = ?;"
-
-	insertCookie = "INSERT INTO sessions (username, cookie, expires) VALUES(?, ?, ?);"
 )
 
 const (
@@ -128,19 +126,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			}
 
 			// creating cookie
-			cookie := cookie.CreateCookie()
-
-			_, err = db.Exec(insertCookie, username, cookie.Value, cookie.Expires.Format("2006-01-02 15:04:05"))
-			if err != nil {
-				w.WriteHeader(500)
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
-					return
-				}
-			}
-
+			cookie := cookie.CreateCookie(username)
 			// sending cookie
 			http.SetCookie(w, &cookie)
 			// redirecting to index page

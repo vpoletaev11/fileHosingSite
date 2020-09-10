@@ -4,10 +4,9 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 )
-
-const deleteSession = "DELETE FROM sessions WHERE cookie=?"
 
 // Page returns HandleFunc that removes user cookie and redirect to login page
 func Page(db *sql.DB) http.HandlerFunc {
@@ -18,7 +17,13 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec(deleteSession, cookie.Value)
+		redisConn, err := redis.Dial("tcp", "localhost:6379")
+		if err != nil {
+			panic(err)
+		}
+		defer redisConn.Close()
+
+		_, err = redisConn.Do("DEL", cookie.Value)
 		if err != nil {
 			errhand.InternalError("logout", "Page", "", err, w)
 			return

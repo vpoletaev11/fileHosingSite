@@ -1,8 +1,7 @@
-package cookie
+package cookie_test
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,38 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/cookie"
+)
+
+const (
+	cookieVal = "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu"
+	username  = "username"
 )
 
 type anyString struct{}
-
-// ()Match() checks is cookie value valid
-func (a anyString) Match(v driver.Value) bool {
-	_, ok := v.(string)
-	if !ok {
-		return false
-	}
-	if !(len(v.(string)) == 60) {
-		return false
-	}
-	return true
-}
-
-type anyTime struct{}
-
-// ()Match() checks is time valid
-func (a anyTime) Match(v driver.Value) bool {
-	_, ok := v.(string)
-	if !ok {
-		return false
-	}
-	if len(v.(string)) != 19 {
-		return false
-	}
-	return true
-}
 
 func testHandler(db *sql.DB, username string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -50,15 +29,11 @@ func testHandler(db *sql.DB, username string) http.HandlerFunc {
 	}
 }
 
-func testAdminHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "test done")
-	}
-}
-
-func TestCreateCookie(t *testing.T) {
-	cookie1 := CreateCookie()
-	cookie2 := CreateCookie()
+func TestCreateCookieSuccess(t *testing.T) {
+	cookie1, err := cookie.CreateCookie("user")
+	assert.NoError(t, err)
+	cookie2, err := cookie.CreateCookie("user")
+	assert.NoError(t, err)
 
 	if cookie1.Expires.After(time.Now().Add(30*time.Minute + 1*time.Second)) {
 		t.Error("cookie.Expires > 30 min. cookie.Expires = " + cookie1.Expires.String())
@@ -80,134 +55,21 @@ func TestCreateCookie(t *testing.T) {
 	}
 }
 
-func TestCookieValidatorSuccess(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
-
-	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
-	require.NoError(t, err)
-
-	inHandlerCookie := &http.Cookie{
-		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
-	}
-
-	r.AddCookie(inHandlerCookie)
-
-	username, cookie, err := cookieValidator(db, r)
-	require.NoError(t, err)
-
-	assert.Equal(t, "example", username)
-	assert.Equal(t, "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu", cookie.Value)
-}
-
-func TestCookieValidatorEmptyCookie(t *testing.T) {
-	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
-	require.NoError(t, err)
-
-	inHandlerCookie := &http.Cookie{}
-
-	r.AddCookie(inHandlerCookie)
-
-	username, cookie, err := cookieValidator(nil, r)
-	require.NoError(t, err)
-
-	assert.Equal(t, "", username)
-	assert.Equal(t, http.Cookie{}, cookie)
-}
-
-func TestCookieValidatorErrGetExpiresAndUsername(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WillReturnError(fmt.Errorf("testing error"))
-
-	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
-	require.NoError(t, err)
-
-	inHandlerCookie := &http.Cookie{
-		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
-	}
-
-	r.AddCookie(inHandlerCookie)
-
-	username, cookie, err := cookieValidator(db, r)
-
-	assert.Equal(t, "", username)
-	assert.Equal(t, "", cookie.Value)
-	assert.Equal(t, "testing error", err.Error())
-}
-
-func TestCookieValidatorCookieExpired(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(-30*time.Minute), "example"))
-	sqlMock.ExpectExec("DELETE FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
-
-	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
-	require.NoError(t, err)
-
-	inHandlerCookie := &http.Cookie{
-		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
-	}
-
-	r.AddCookie(inHandlerCookie)
-
-	username, cookie, err := cookieValidator(db, r)
-	require.NoError(t, err)
-
-	assert.Equal(t, "", username)
-	assert.Equal(t, http.Cookie{}, cookie)
-}
-
-func TestCookieValidatorCookieExpiredErrorDB(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(-30*time.Minute), "example"))
-	sqlMock.ExpectExec("DELETE FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnError(fmt.Errorf("testing error"))
-
-	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
-	require.NoError(t, err)
-
-	inHandlerCookie := &http.Cookie{
-		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
-	}
-
-	r.AddCookie(inHandlerCookie)
-
-	username, cookie, err := cookieValidator(db, r)
-
-	assert.Equal(t, "", username)
-	assert.Equal(t, http.Cookie{}, cookie)
-	assert.Equal(t, "testing error", err.Error())
-}
-
 func TestAuthWrapperSuccess(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
-	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	redisConn := redigomock.NewConn()
+	redisConn.Command("GET", cookieVal).Expect(username)
+	redisConn.Command("EXPIRE", cookieVal, cookie.CookieLifetime.Seconds())
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-
 	inHandlerCookie := &http.Cookie{
 		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+		Value: cookieVal,
 	}
-
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(testHandler, db)
+	sut := cookie.AuthWrapper(testHandler, nil, redisConn)
 
 	sut(w, r)
 
@@ -217,27 +79,19 @@ func TestAuthWrapperSuccess(t *testing.T) {
 	}
 	bodyString := string(bodyBytes)
 
-	assert.Equal(t, "example", bodyString)
+	assert.Equal(t, username, bodyString)
 }
 
-func TestAuthWrapperValidatorError(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WillReturnError(fmt.Errorf("testing error"))
+func TestAuthWrapperEmptyCookieError(t *testing.T) {
+	redisConn := redigomock.NewConn()
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-
-	inHandlerCookie := &http.Cookie{
-		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
-	}
-
+	inHandlerCookie := &http.Cookie{}
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(testHandler, db)
+	sut := cookie.AuthWrapper(testHandler, nil, redisConn)
 
 	sut(w, r)
 
@@ -247,15 +101,12 @@ func TestAuthWrapperValidatorError(t *testing.T) {
 	}
 	bodyString := string(bodyBytes)
 
-	assert.Equal(t, "INTERNAL ERROR. Please try later.\n", bodyString)
+	assert.Equal(t, "", bodyString)
 }
 
-func TestAuthWrapperEmptyUsename(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), ""))
+func TestAuthWrapperGettingUsernameError(t *testing.T) {
+	redisConn := redigomock.NewConn()
+	redisConn.Command("GET", cookieVal).ExpectError(fmt.Errorf("Testing Error"))
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -263,12 +114,12 @@ func TestAuthWrapperEmptyUsename(t *testing.T) {
 
 	inHandlerCookie := &http.Cookie{
 		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+		Value: cookieVal,
 	}
 
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(testHandler, db)
+	sut := cookie.AuthWrapper(testHandler, nil, redisConn)
 
 	sut(w, r)
 
@@ -282,26 +133,21 @@ func TestAuthWrapperEmptyUsename(t *testing.T) {
 	assert.Equal(t, "", bodyString)
 }
 
-func TestAuthWrapperExtendingCookieLifetimeDBError(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-
-	rows := []string{"expires", "username"}
-	sqlMock.ExpectQuery("SELECT expires, username FROM sessions WHERE cookie=").WithArgs(anyString{}).WillReturnRows(sqlmock.NewRows(rows).AddRow(time.Now().Add(30*time.Minute), "example"))
-	sqlMock.ExpectExec("UPDATE sessions SET expires=").WithArgs(anyTime{}, anyString{}).WillReturnError(fmt.Errorf("testing error"))
+func TestAuthWrapperExtendingCookieLifetimeError(t *testing.T) {
+	redisConn := redigomock.NewConn()
+	redisConn.Command("GET", cookieVal).Expect(username)
+	redisConn.Command("EXPIRE", cookieVal, cookie.CookieLifetime.Seconds()).ExpectError(fmt.Errorf("Testing error"))
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-
 	inHandlerCookie := &http.Cookie{
 		Name:  "session_id",
-		Value: "D8SgghMYJQSo9PXuH7wihJlrRFP18RKBzITHDwXou8VGqaVHW1Yi9KWyIrUu",
+		Value: cookieVal,
 	}
-
 	r.AddCookie(inHandlerCookie)
 
-	sut := AuthWrapper(testHandler, db)
+	sut := cookie.AuthWrapper(testHandler, nil, redisConn)
 
 	sut(w, r)
 

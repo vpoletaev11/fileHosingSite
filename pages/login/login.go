@@ -126,7 +126,11 @@ func Page(db *sql.DB) http.HandlerFunc {
 			}
 
 			// creating cookie
-			cookie := cookie.CreateCookie(username)
+			cookie, err := cookie.CreateCookie(username)
+			if err != nil {
+				errhand.InternalError("registration", "Page", "", err, w)
+				return
+			}
 			// sending cookie
 			http.SetCookie(w, &cookie)
 			// redirecting to index page

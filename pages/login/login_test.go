@@ -537,54 +537,6 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 </body>`, bodyString)
 }
 
-func TestPageQueryEXECErr(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	row := []string{"password"}
-	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
-	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}, anyTime{}).WillReturnError(fmt.Errorf("test error"))
-
-	data := url.Values{}
-	data.Set("username", "example")
-	data.Add("password", "example")
-
-	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
-	require.NoError(t, err)
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
-	w := httptest.NewRecorder()
-
-	sut := Page(db)
-	sut(w, r)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="assets/css/login.css">
-<head>
-<body bgcolor=#f1ded3>
-    <div class="loginForm">
-        <form action="" method="post">
-            <p>Username: <input required maxlength="20" type="text" name="username"></p>
-            <p>Password: <input required maxlength="40" type="password" name="password"></p>
-            <input type="submit" value="Login">
-            <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
-            <h2 style="color:red">INTERNAL ERROR. Please try later</h2>
-        </form>
-    </div>
-</body>`, bodyString)
-}
-
 // tests for comparePasswords():
 
 func TestComparePasswordSuccess(t *testing.T) {

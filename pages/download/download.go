@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/vpoletaev11/fileHostingSite/dbformat"
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
@@ -48,27 +49,27 @@ type TemplateDownload struct {
 }
 
 // Page returns HandleFunc for download[/download] page
-func Page(db *sql.DB, username string) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page
 		page, err := tmp.CreateTemplate(pathTemplateDownload)
 		if err != nil {
-			errhand.InternalError("download", "Page", username, err, w)
+			errhand.InternalError("download", "Page", dep.Username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			fileID := r.URL.Query().Get("id")
 
-			fi, err := dbformat.FormatedDownloadFileInfo(username, db, fileInfoDB, fileID)
+			fi, err := dbformat.FormatedDownloadFileInfo(dep.Username, dep.Db, fileInfoDB, fileID)
 			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
+				errhand.InternalError("download", "Page", dep.Username, err, w)
 				return
 			}
 
-			err = page.Execute(w, TemplateDownload{Username: username, FileInfo: fi})
+			err = page.Execute(w, TemplateDownload{Username: dep.Username, FileInfo: fi})
 			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
+				errhand.InternalError("download", "Page", dep.Username, err, w)
 				return
 			}
 			return
@@ -91,16 +92,16 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			id := r.URL.Query().Get("id")
 
-			alreadyRated, err := setRating(db, id, username, rating)
+			alreadyRated, err := setRating(dep.Db, id, dep.Username, rating)
 			if err != nil {
-				errhand.InternalError("download", "Page", username, err, w)
+				errhand.InternalError("download", "Page", dep.Username, err, w)
 				return
 			}
 
 			if alreadyRated {
-				err := changeRating(db, rating, id, username)
+				err := changeRating(dep.Db, rating, id, dep.Username)
 				if err != nil {
-					errhand.InternalError("download", "Page", username, err, w)
+					errhand.InternalError("download", "Page", dep.Username, err, w)
 					return
 				}
 			}

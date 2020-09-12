@@ -16,11 +16,11 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 func TestPageSuccessGET(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE id").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
 			"id",
@@ -49,7 +49,7 @@ func TestPageSuccessGET(t *testing.T) {
 			"Europe/Moscow",
 		))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/download?id=1", nil)
@@ -130,8 +130,7 @@ func TestPageSuccessGET(t *testing.T) {
 }
 
 func TestPageSettingRatingSuccessPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnRows(
@@ -142,7 +141,7 @@ func TestPageSettingRatingSuccessPOST(t *testing.T) {
 		))
 	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(10, "owner").WillReturnResult(sqlmock.NewResult(1, 1))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -165,8 +164,7 @@ func TestPageSettingRatingSuccessPOST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingSuccessPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -184,7 +182,7 @@ func TestPageUpdatingRatingSuccessPOST(t *testing.T) {
 		))
 	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(0, 10, "owner").WillReturnResult(sqlmock.NewResult(1, 1))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -207,8 +205,7 @@ func TestPageUpdatingRatingSuccessPOST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingSameRatingSuccessPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -217,7 +214,7 @@ func TestPageUpdatingRatingSameRatingSuccessPOST(t *testing.T) {
 			"10",
 		))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -240,12 +237,11 @@ func TestPageUpdatingRatingSameRatingSuccessPOST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingsDBError01POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -268,8 +264,7 @@ func TestPageUpdatingRatingsDBError01POST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingsDBError02POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -279,7 +274,7 @@ func TestPageUpdatingRatingsDBError02POST(t *testing.T) {
 		))
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(0, 10, "1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -302,8 +297,7 @@ func TestPageUpdatingRatingsDBError02POST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingsDBError03POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -314,7 +308,7 @@ func TestPageUpdatingRatingsDBError03POST(t *testing.T) {
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(0, 10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectExec("UPDATE filesRating SET rating").WithArgs(10, "1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -337,8 +331,7 @@ func TestPageUpdatingRatingsDBError03POST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingsDBError04POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -350,7 +343,7 @@ func TestPageUpdatingRatingsDBError04POST(t *testing.T) {
 	sqlMock.ExpectExec("UPDATE filesRating SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -373,8 +366,7 @@ func TestPageUpdatingRatingsDBError04POST(t *testing.T) {
 }
 
 func TestPageUpdatingRatingsDBError05POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("Error 1062"))
 	sqlMock.ExpectQuery("SELECT rating FROM filesRating WHERE fileID").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
@@ -392,7 +384,7 @@ func TestPageUpdatingRatingsDBError05POST(t *testing.T) {
 		))
 	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(0, 10, "owner").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -415,6 +407,7 @@ func TestPageUpdatingRatingsDBError05POST(t *testing.T) {
 }
 
 func TestPageMissingTemplate(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateDownload
 	newName := "../../" + pathTemplateDownload + "edit"
@@ -427,7 +420,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, 500, w.Code)
@@ -449,11 +442,10 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageDBFileInfoGatheringErrorGET(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE id").WithArgs("1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/download?id=1", nil)
@@ -471,8 +463,7 @@ func TestPageDBFileInfoGatheringErrorGET(t *testing.T) {
 }
 
 func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE id").WithArgs("1").WillReturnRows(
 		sqlmock.NewRows([]string{
 			"id",
@@ -496,7 +487,7 @@ func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
 
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username").WithArgs("username").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/download?id=1", nil)
@@ -514,7 +505,8 @@ func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
 }
 
 func TestPageIncorrectPOSTParameter01(t *testing.T) {
-	sut := Page(nil, "username")
+	dep, _ := test.NewDep(t)
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -537,7 +529,8 @@ func TestPageIncorrectPOSTParameter01(t *testing.T) {
 }
 
 func TestPageIncorrectPOSTParameter02(t *testing.T) {
-	sut := Page(nil, "username")
+	dep, _ := test.NewDep(t)
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -560,7 +553,8 @@ func TestPageIncorrectPOSTParameter02(t *testing.T) {
 }
 
 func TestPageIncorrectPOSTParameter03(t *testing.T) {
-	sut := Page(nil, "username")
+	dep, _ := test.NewDep(t)
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -583,11 +577,10 @@ func TestPageIncorrectPOSTParameter03(t *testing.T) {
 }
 
 func TestPageSetRatingError01POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -610,12 +603,11 @@ func TestPageSetRatingError01POST(t *testing.T) {
 }
 
 func TestPageSetRatingError02POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -638,13 +630,12 @@ func TestPageSetRatingError02POST(t *testing.T) {
 }
 
 func TestPageSetRatingError03POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 
@@ -667,8 +658,7 @@ func TestPageSetRatingError03POST(t *testing.T) {
 }
 
 func TestPageSetRatingError04POST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO filesRating").WithArgs("1", "username", 10).WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectExec("UPDATE files SET rating").WithArgs(10, "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	sqlMock.ExpectQuery("SELECT owner FROM files WHERE id").WithArgs("1").WillReturnRows(
@@ -679,7 +669,7 @@ func TestPageSetRatingError04POST(t *testing.T) {
 		))
 	sqlMock.ExpectExec("UPDATE users SET rating").WithArgs(10, "owner").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 

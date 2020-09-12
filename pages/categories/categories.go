@@ -9,6 +9,7 @@ import (
 
 	"github.com/vpoletaev11/fileHostingSite/dbformat"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 )
 
@@ -53,10 +54,10 @@ type numLink struct {
 }
 
 // anyCategoryPageHandler handling any category[/categories/*any category*] page
-func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, r *http.Request) {
+func anyCategoryPageHandler(dep session.Dependency, w http.ResponseWriter, r *http.Request) {
 	page, err := tmp.CreateTemplate(pathTemplateAnyCategory)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
 		return
 	}
 
@@ -71,9 +72,9 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	category := link
 
 	// getting count of pages
-	pagesCount, err := pagesCount(db, category)
+	pagesCount, err := pagesCount(dep.Db, category)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
 		return
 	}
 
@@ -90,16 +91,16 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 	}
 
 	// getting files info for current page
-	fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo, category, (numPage-1)*rowsInPage, numPage*rowsInPage)
+	fiCollection, err := dbformat.FormatedFilesInfo(dep.Username, dep.Db, selectFileInfo, category, (numPage-1)*rowsInPage, numPage*rowsInPage)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
 		return
 	}
 
 	if pagesCount == 1 {
-		err := page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, Title: r.URL.Path[len("/categories/"):]})
+		err := page.Execute(w, TemplateAnyCategory{Username: dep.Username, UploadedFiles: fiCollection, Title: r.URL.Path[len("/categories/"):]})
 		if err != nil {
-			errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+			errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
 			return
 		}
 		return
@@ -107,33 +108,33 @@ func anyCategoryPageHandler(db *sql.DB, username string, w http.ResponseWriter, 
 
 	// creating navigation bar if count of pages > 1
 	numsLinks := navigationBar(pagesCount, numPage, category)
-	err = page.Execute(w, TemplateAnyCategory{Username: username, UploadedFiles: fiCollection, LinkList: numsLinks, Title: r.URL.Path[len("/categories/"):]})
+	err = page.Execute(w, TemplateAnyCategory{Username: dep.Username, UploadedFiles: fiCollection, LinkList: numsLinks, Title: r.URL.Path[len("/categories/"):]})
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", username, err, w)
+		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
 		return
 	}
 	return
 }
 
 // Page returns HandleFunc for categories[/categories/] and any category[/categories/*any category*] pages
-func Page(db *sql.DB, username string) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for categories page
 		page, err := tmp.CreateTemplate(pathTemplateCategories)
 		if err != nil {
-			errhand.InternalError("categories", "Page", username, err, w)
+			errhand.InternalError("categories", "Page", dep.Username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			if r.URL.Path[len("/categories/"):] == "" {
-				err := page.Execute(w, TemplateCategories{Username: username})
+				err := page.Execute(w, TemplateCategories{Username: dep.Username})
 				if err != nil {
-					errhand.InternalError("categories", "Page", username, err, w)
+					errhand.InternalError("categories", "Page", dep.Username, err, w)
 				}
 				return
 			}
-			anyCategoryPageHandler(db, username, w, r)
+			anyCategoryPageHandler(dep, w, r)
 			return
 		}
 	}

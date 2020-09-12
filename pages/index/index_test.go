@@ -13,12 +13,12 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGet(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 
 	fileInfoRows := []string{
 		"id",
@@ -43,7 +43,7 @@ func TestPageSuccessGet(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -112,6 +112,7 @@ func TestPageSuccessGet(t *testing.T) {
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateIndex
 	newName := "../../" + pathTemplateIndex + "edit"
@@ -124,7 +125,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil, "")
+	sut := Page(dep)
 	sut(w, r)
 
 	// renaming template file to original filename
@@ -146,12 +147,11 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageDBError01Get(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY uploadDate DESC LIMIT 15;").WithArgs().WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -167,8 +167,7 @@ func TestPageDBError01Get(t *testing.T) {
 }
 
 func TestPageDBError02Get(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 
 	fileInfoRows := []string{
 		"id",
@@ -193,7 +192,7 @@ func TestPageDBError02Get(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)

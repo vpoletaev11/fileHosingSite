@@ -1,11 +1,11 @@
 package index
 
 import (
-	"database/sql"
 	"html/template"
 	"net/http"
 
 	"github.com/vpoletaev11/fileHostingSite/dbformat"
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
@@ -24,25 +24,25 @@ type TemplateIndex struct {
 }
 
 // Page returns HandleFunc for index[/index] page
-func Page(db *sql.DB, username string) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page
 		page, err := tmp.CreateTemplate(pathTemplateIndex)
 		if err != nil {
-			errhand.InternalError("index", "Page", username, err, w)
+			errhand.InternalError("index", "Page", dep.Username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
-			fiCollection, err := dbformat.FormatedFilesInfo(username, db, selectFileInfo)
+			fiCollection, err := dbformat.FormatedFilesInfo(dep.Username, dep.Db, selectFileInfo)
 			if err != nil {
-				errhand.InternalError("index", "Page", username, err, w)
+				errhand.InternalError("index", "Page", dep.Username, err, w)
 				return
 			}
 
-			err = page.Execute(w, TemplateIndex{Username: username, UploadedFiles: fiCollection})
+			err = page.Execute(w, TemplateIndex{Username: dep.Username, UploadedFiles: fiCollection})
 			if err != nil {
-				errhand.InternalError("index", "Page", username, err, w)
+				errhand.InternalError("index", "Page", dep.Username, err, w)
 				return
 			}
 			return

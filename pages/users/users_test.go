@@ -12,11 +12,11 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 func TestPageSuccessGet(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15").WithArgs().WillReturnRows(sqlmock.NewRows(
 		[]string{
@@ -27,7 +27,7 @@ func TestPageSuccessGet(t *testing.T) {
 		1000,
 	))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -81,6 +81,7 @@ func TestPageSuccessGet(t *testing.T) {
 }
 
 func TestPageMissingTemplate(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateUsers
 	newName := "../../" + pathTemplateUsers + "edit"
@@ -93,7 +94,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil, "")
+	sut := Page(dep)
 	sut(w, r)
 
 	// renaming template file to original filename
@@ -115,12 +116,11 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageDBQueryErrorsGet(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15").WithArgs().WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/", nil)
 	require.NoError(t, err)

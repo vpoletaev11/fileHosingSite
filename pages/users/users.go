@@ -1,10 +1,10 @@
 package users
 
 import (
-	"database/sql"
 	"html/template"
 	"net/http"
 
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
@@ -29,19 +29,19 @@ type UserInfo struct {
 }
 
 // Page returns HandleFunc for user[/users] page
-func Page(db *sql.DB, username string) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for index page
 		page, err := tmp.CreateTemplate(pathTemplateUsers)
 		if err != nil {
-			errhand.InternalError("users", "Page", username, err, w)
+			errhand.InternalError("users", "Page", dep.Username, err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
-			rows, err := db.Query(selectUsers)
+			rows, err := dep.Db.Query(selectUsers)
 			if err != nil {
-				errhand.InternalError("users", "Page", username, err, w)
+				errhand.InternalError("users", "Page", dep.Username, err, w)
 				return
 			}
 			defer rows.Close()
@@ -55,15 +55,15 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 					&ui.Rating,
 				)
 				if err != nil {
-					errhand.InternalError("users", "Page", username, err, w)
+					errhand.InternalError("users", "Page", dep.Username, err, w)
 					return
 				}
 				usersInfo = append(usersInfo, ui)
 			}
 
-			err = page.Execute(w, TemplateUsers{Username: username, UserList: usersInfo})
+			err = page.Execute(w, TemplateUsers{Username: dep.Username, UserList: usersInfo})
 			if err != nil {
-				errhand.InternalError("users", "Page", username, err, w)
+				errhand.InternalError("users", "Page", dep.Username, err, w)
 				return
 			}
 			return

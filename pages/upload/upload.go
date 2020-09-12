@@ -1,7 +1,6 @@
 package upload
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
 	"github.com/vpoletaev11/fileHostingSite/errhand"
@@ -57,19 +57,19 @@ func (pt *PassThru) Read(p []byte) (int, error) {
 }
 
 // Page returns HandleFunc for upload[/upload] file page
-func Page(db *sql.DB, username string) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := tmp.CreateTemplate(pathTemplateUpload)
 		if err != nil {
-			errhand.InternalError("upload", "Page", username, err, w)
+			errhand.InternalError("upload", "Page", dep.Username, err, w)
 			return
 		}
 
 		switch r.Method {
 		case "GET":
-			err := page.Execute(w, TemplateUpload{Username: username})
+			err := page.Execute(w, TemplateUpload{Username: dep.Username})
 			if err != nil {
-				errhand.InternalError("upload", "Page", username, err, w)
+				errhand.InternalError("upload", "Page", dep.Username, err, w)
 				return
 			}
 			return
@@ -81,7 +81,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// getting file from upload form
 			file, header, err := r.FormFile("uploaded_file")
 			if err != nil {
-				errhand.InternalError("upload", "Page", username, err, w)
+				errhand.InternalError("upload", "Page", dep.Username, err, w)
 				return
 			}
 			defer file.Close()
@@ -93,9 +93,9 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 
 			err = fileInfoValidator(header.Size, filename, description, category)
 			if err != nil {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>", Username: dep.Username})
 				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
+					errhand.InternalError("upload", "Page", dep.Username, err, w)
 					return
 				}
 				return
@@ -105,14 +105,14 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// sending information about uploaded file to MySQL server
 			loc, err := time.LoadLocation("UTC")
 			if err != nil {
-				errhand.InternalError("upload", "Page", username, err, w)
+				errhand.InternalError("upload", "Page", dep.Username, err, w)
 				return
 			}
-			res, err := db.Exec(sendFileInfoToDB, filename, header.Size, description, username, category, time.Now().In(loc).Format("2006-01-02 15:04:05"))
+			res, err := dep.Db.Exec(sendFileInfoToDB, filename, header.Size, description, dep.Username, category, time.Now().In(loc).Format("2006-01-02 15:04:05"))
 			if err != nil {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: dep.Username})
 				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
+					errhand.InternalError("upload", "Page", dep.Username, err, w)
 					return
 				}
 				return
@@ -121,9 +121,9 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// getting id of uploaded file from exec
 			idInt, err := res.LastInsertId()
 			if err != nil {
-				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: username})
+				err := page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>", Username: dep.Username})
 				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
+					errhand.InternalError("upload", "Page", dep.Username, err, w)
 					return
 				}
 				return
@@ -133,7 +133,7 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			// writting data to file on disk from uploaded file
 			f, err := os.Create("files/" + id)
 			if err != nil {
-				errhand.InternalError("upload", "Page", username, err, w)
+				errhand.InternalError("upload", "Page", dep.Username, err, w)
 				return
 			}
 
@@ -141,16 +141,16 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 			if err != nil {
 				err := os.Remove(f.Name())
 				if err != nil {
-					errhand.InternalError("upload", "Page", username, err, w)
+					errhand.InternalError("upload", "Page", dep.Username, err, w)
 					return
 				}
-				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1GB</h2>", Username: username})
+				page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:red\">Filesize more than 1GB</h2>", Username: dep.Username})
 				return
 			}
 
-			err = page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: username})
+			err = page.Execute(w, TemplateUpload{Warning: "<h2 style=\"color:green\">FILE SUCCEEDED UPLOADED</h2>", Username: dep.Username})
 			if err != nil {
-				errhand.InternalError("upload", "Page", username, err, w)
+				errhand.InternalError("upload", "Page", dep.Username, err, w)
 				return
 			}
 			return
@@ -159,7 +159,6 @@ func Page(db *sql.DB, username string) http.HandlerFunc {
 }
 
 func fileInfoValidator(filesize int64, filename, description, category string) error {
-	// handling of case when filesize more than 1GB
 	switch {
 	case filesize > maxFilesize:
 		return fmt.Errorf("Filesize cannot be more than 1GB")

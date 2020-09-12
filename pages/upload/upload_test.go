@@ -14,6 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 type anyTime struct{}
@@ -31,7 +32,8 @@ func (a anyTime) Match(v driver.Value) bool {
 }
 
 func TestPageSuccessGET(t *testing.T) {
-	sut := Page(nil, "username")
+	dep, _ := test.NewDep(t)
+	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
 	require.NoError(t, err)
@@ -93,8 +95,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
 
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -133,7 +134,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -186,6 +187,7 @@ binary data
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateUpload
 	newName := "../../" + pathTemplateUpload + "edit"
@@ -198,7 +200,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil, "")
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, 500, w.Code)
@@ -220,12 +222,11 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageErrorFileReceptionPOST(t *testing.T) {
+	dep, sqlMock := test.NewDep(t)
 	// changing directory because of test are not containing in root folder
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
 
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -258,7 +259,7 @@ other
 
 	w := httptest.NewRecorder()
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -268,12 +269,11 @@ other
 }
 
 func TestPageEmptyFilenameSuccessPOST(t *testing.T) {
+	dep, sqlMock := test.NewDep(t)
 	// changing directory because of test are not containing in root folder
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
 
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"file",
 		11,
@@ -312,7 +312,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -363,6 +363,7 @@ binary data
 }
 
 func TestPageLargeFilenameErrorPOST(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -392,7 +393,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(nil, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -443,6 +444,7 @@ binary data
 }
 
 func TestPageLargeDescriptionErrorPOST(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -472,7 +474,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(nil, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -523,6 +525,7 @@ binary data
 }
 
 func TestPageWrongCategoryErrorPOST(t *testing.T) {
+	dep, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -552,7 +555,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(nil, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -603,8 +606,7 @@ binary data
 }
 
 func TestPageDBInsertionErrorPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -643,7 +645,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -694,8 +696,7 @@ binary data
 }
 
 func TestPageCreatingFileErrorPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -734,7 +735,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(db, "username")
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)

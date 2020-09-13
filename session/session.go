@@ -71,10 +71,11 @@ func cookieValidator(redisConn redis.Conn, r *http.Request) (string, http.Cookie
 func AuthWrapper(pageHandler page, dep Dependency) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// checking cookie validity
-		username, cookie := cookieValidator(dep.Redis, r)
+		cookie := http.Cookie{}
+		dep.Username, cookie = cookieValidator(dep.Redis, r)
 
 		// handling case when cookie invalid
-		if username == "" {
+		if dep.Username == "" {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}

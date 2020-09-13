@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/session"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 const (
@@ -29,12 +30,12 @@ func testHandler(dep session.Dependency) http.HandlerFunc {
 }
 
 func TestCreateCookieSuccess(t *testing.T) {
-	redisConn := redigomock.NewConn()
-	redisConn.Command("SET", redigomock.NewAnyData(), username, "EX", session.CookieLifetime.Seconds())
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("SET", redigomock.NewAnyData(), username, "EX", session.CookieLifetime.Seconds())
 
-	cookie1, err := session.CreateCookie("username", redisConn)
+	cookie1, err := session.CreateCookie(dep)
 	assert.NoError(t, err)
-	cookie2, err := session.CreateCookie("username", redisConn)
+	cookie2, err := session.CreateCookie(dep)
 	assert.NoError(t, err)
 
 	if cookie1.Expires.After(time.Now().Add(30*time.Minute + 1*time.Second)) {
@@ -58,9 +59,9 @@ func TestCreateCookieSuccess(t *testing.T) {
 }
 
 func TestAuthWrapperSuccess(t *testing.T) {
-	redisConn := redigomock.NewConn()
-	redisConn.Command("GET", cookieVal).Expect(username)
-	redisConn.Command("EXPIRE", cookieVal, session.CookieLifetime.Seconds())
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("GET", cookieVal).Expect(username)
+	redisMock.Command("EXPIRE", cookieVal, session.CookieLifetime.Seconds())
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -71,11 +72,6 @@ func TestAuthWrapperSuccess(t *testing.T) {
 	}
 	r.AddCookie(inHandlerCookie)
 
-	dep := session.Dependency{
-		Db:       nil,
-		Redis:    redisConn,
-		Username: username,
-	}
 	sut := session.AuthWrapper(testHandler, dep)
 
 	sut(w, r)
@@ -90,16 +86,16 @@ func TestAuthWrapperSuccess(t *testing.T) {
 }
 
 func TestCreateCookieSendToRedisError(t *testing.T) {
-	redisConn := redigomock.NewConn()
-	redisConn.Close()
+	dep, _, _ := test.NewDep(t)
+	dep.Redis.Close()
 
-	cookie, err := session.CreateCookie("user", redisConn)
+	cookie, err := session.CreateCookie(dep)
 	assert.Equal(t, http.Cookie{}, cookie)
 	assert.NotNil(t, err)
 }
 
 func TestAuthWrapperEmptyCookieError(t *testing.T) {
-	redisConn := redigomock.NewConn()
+	dep, _, _ := test.NewDep(t)
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -107,11 +103,6 @@ func TestAuthWrapperEmptyCookieError(t *testing.T) {
 	inHandlerCookie := &http.Cookie{}
 	r.AddCookie(inHandlerCookie)
 
-	dep := session.Dependency{
-		Db:       nil,
-		Redis:    redisConn,
-		Username: username,
-	}
 	sut := session.AuthWrapper(testHandler, dep)
 
 	sut(w, r)
@@ -126,8 +117,8 @@ func TestAuthWrapperEmptyCookieError(t *testing.T) {
 }
 
 func TestAuthWrapperGettingUsernameError(t *testing.T) {
-	redisConn := redigomock.NewConn()
-	redisConn.Command("GET", cookieVal).ExpectError(fmt.Errorf("Testing Error"))
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("GET", cookieVal).ExpectError(fmt.Errorf("Testing Error"))
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -140,11 +131,6 @@ func TestAuthWrapperGettingUsernameError(t *testing.T) {
 
 	r.AddCookie(inHandlerCookie)
 
-	dep := session.Dependency{
-		Db:       nil,
-		Redis:    redisConn,
-		Username: username,
-	}
 	sut := session.AuthWrapper(testHandler, dep)
 
 	sut(w, r)
@@ -160,9 +146,9 @@ func TestAuthWrapperGettingUsernameError(t *testing.T) {
 }
 
 func TestAuthWrapperExtendingCookieLifetimeError(t *testing.T) {
-	redisConn := redigomock.NewConn()
-	redisConn.Command("GET", cookieVal).Expect(username)
-	redisConn.Command("EXPIRE", cookieVal, session.CookieLifetime.Seconds()).ExpectError(fmt.Errorf("Testing error"))
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("GET", cookieVal).Expect(username)
+	redisMock.Command("EXPIRE", cookieVal, session.CookieLifetime.Seconds()).ExpectError(fmt.Errorf("Testing error"))
 
 	r, err := http.NewRequest(http.MethodPost, "http://localhost/", nil)
 	require.NoError(t, err)
@@ -173,11 +159,6 @@ func TestAuthWrapperExtendingCookieLifetimeError(t *testing.T) {
 	}
 	r.AddCookie(inHandlerCookie)
 
-	dep := session.Dependency{
-		Db:       nil,
-		Redis:    redisConn,
-		Username: username,
-	}
 	sut := session.AuthWrapper(testHandler, dep)
 
 	sut(w, r)

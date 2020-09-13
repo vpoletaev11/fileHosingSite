@@ -14,8 +14,11 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/session"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 type anyString struct{}
@@ -48,7 +51,8 @@ func (a anyTime) Match(v driver.Value) bool {
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
-	sut := Page(nil)
+	dep, _, _ := test.NewDep(t)
+	sut := Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/login", nil)
@@ -85,14 +89,14 @@ func TestPageSuccessGET(t *testing.T) {
 
 // TestPageSuccessPost checks workability of POST requests handler in Page()
 func TestPageSuccessPOST(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock, redisMock := test.NewDep(t)
 	row := []string{"password"}
-	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
-	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("example", anyString{}, anyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows(row).AddRow("$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"))
+	sqlMock.ExpectExec("INSERT INTO sessions").WithArgs("username", anyString{}, anyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+	redisMock.Command("SET", redigomock.NewAnyData(), "username", "EX", session.CookieLifetime.Seconds())
 
 	data := url.Values{}
-	data.Set("username", "example")
+	data.Set("username", "username")
 	data.Add("password", "example")
 
 	r, err := http.NewRequest("POST", "http://localhost/login", strings.NewReader(data.Encode()))
@@ -101,7 +105,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusFound, w.Code)
@@ -124,6 +128,7 @@ func TestPageSuccessPOST(t *testing.T) {
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateLogin
 	newName := "../../" + pathTemplateLogin + "edit"
@@ -136,7 +141,7 @@ func TestPageMissingTemplate(t *testing.T) {
 	require.NoError(t, err)
 
 	// running of the page handler with un-exists template file
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, 500, w.Code)
@@ -159,6 +164,7 @@ func TestPageMissingTemplate(t *testing.T) {
 
 // TestPageEmptyUsername tests case when username is empty.
 func TestPageEmptyUsername(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	data := url.Values{}
 	data.Set("username", "")
 	data.Add("password", "example")
@@ -169,7 +175,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -197,6 +203,7 @@ func TestPageEmptyUsername(t *testing.T) {
 
 // TestPageEmptyPassword tests case when password is empty.
 func TestPageEmptyPassword(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	data := url.Values{}
 	data.Set("username", "example")
 	data.Add("password", "")
@@ -207,7 +214,7 @@ func TestPageEmptyPassword(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -235,6 +242,7 @@ func TestPageEmptyPassword(t *testing.T) {
 
 // TestPageLargerUsername tests case when len(username) > 20.
 func TestPageLargerUsername(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	data := url.Values{}
 	data.Set("username", "example_larger_than_20_characters")
 	data.Add("password", "example")
@@ -245,7 +253,7 @@ func TestPageLargerUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -273,6 +281,7 @@ func TestPageLargerUsername(t *testing.T) {
 
 // TestPageLargerPassword tests case when len(password) > 20.
 func TestPageLargerPassword(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	data := url.Values{}
 	data.Set("username", "example")
 	data.Add("password", "password_larger_than_40_characters____________________")
@@ -283,7 +292,7 @@ func TestPageLargerPassword(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -311,6 +320,7 @@ func TestPageLargerPassword(t *testing.T) {
 
 // TestPageNonLowerCaseUsername tests case when username is non lower-case
 func TestPageNonLowerCaseUsername(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	data := url.Values{}
 	data.Set("username", "Example")
 	data.Add("password", "example")
@@ -321,7 +331,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -349,9 +359,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 
 // TestPageQuerySelectErr tests case when SELECT query returns error
 func TestPageQuerySELECTErr(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	//row := []string{"password"}
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnError(fmt.Errorf("test error"))
 
 	data := url.Values{}
@@ -364,7 +372,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -397,8 +405,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 
 // TestPageSELECTReturnsEmptyPass tests case when SELECT query returns empty password
 func TestPageSELECTReturnsEmptyPass(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"password"}
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow(""))
 
@@ -412,7 +419,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -444,8 +451,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 }
 
 func TestPagePassordNotFound(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnError(fmt.Errorf("sql: no rows in result set"))
 
 	data := url.Values{}
@@ -458,7 +464,7 @@ func TestPagePassordNotFound(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -491,8 +497,7 @@ func TestPagePassordNotFound(t *testing.T) {
 
 // TestPageComparePasswordsDoesntMatch tests case when comparePasswords() gets not matched password with hashed password and returns error
 func TestPageComparePasswordsDoesntMatch(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"password"}
 	sqlMock.ExpectQuery("SELECT password FROM users WHERE username =").WithArgs("example").WillReturnRows(sqlmock.NewRows(row).AddRow("broken hash"))
 
@@ -506,7 +511,7 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)

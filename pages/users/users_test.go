@@ -16,7 +16,7 @@ import (
 )
 
 func TestPageSuccessGet(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15").WithArgs().WillReturnRows(sqlmock.NewRows(
 		[]string{
@@ -81,7 +81,7 @@ func TestPageSuccessGet(t *testing.T) {
 }
 
 func TestPageMissingTemplate(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateUsers
 	newName := "../../" + pathTemplateUsers + "edit"
@@ -116,7 +116,7 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageDBQueryErrorsGet(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT username, rating FROM users ORDER BY rating DESC LIMIT 15").WithArgs().WillReturnError(fmt.Errorf("testing error"))
 

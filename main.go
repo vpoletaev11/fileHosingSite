@@ -34,9 +34,9 @@ func main() {
 	http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("files"))))
 
 	http.HandleFunc("/registration", registration.Page(dep.Db))
-	http.HandleFunc("/login", login.Page(dep.Db))
+	http.HandleFunc("/login", login.Page(dep))
 	http.HandleFunc("/", session.AuthWrapper(index.Page, dep))
-	http.HandleFunc("/logout", logout.Page(dep.Db))
+	http.HandleFunc("/logout", logout.Page(dep))
 	http.HandleFunc("/upload", session.AuthWrapper(upload.Page, dep))
 	http.HandleFunc("/categories/", session.AuthWrapper(categories.Page, dep))
 	http.HandleFunc("/download", session.AuthWrapper(download.Page, dep))

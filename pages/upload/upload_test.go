@@ -32,7 +32,7 @@ func (a anyTime) Match(v driver.Value) bool {
 }
 
 func TestPageSuccessGET(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	sut := Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
@@ -95,7 +95,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
 
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -187,7 +187,7 @@ binary data
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateUpload
 	newName := "../../" + pathTemplateUpload + "edit"
@@ -222,7 +222,7 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageErrorFileReceptionPOST(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	// changing directory because of test are not containing in root folder
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
@@ -269,7 +269,7 @@ other
 }
 
 func TestPageEmptyFilenameSuccessPOST(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	// changing directory because of test are not containing in root folder
 	os.Chdir("../../")
 	defer os.Chdir("pages/upload")
@@ -363,7 +363,7 @@ binary data
 }
 
 func TestPageLargeFilenameErrorPOST(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -444,7 +444,7 @@ binary data
 }
 
 func TestPageLargeDescriptionErrorPOST(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -525,7 +525,7 @@ binary data
 }
 
 func TestPageWrongCategoryErrorPOST(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	postData :=
 		`--xxx
 Content-Disposition: form-data; name="filename"
@@ -606,7 +606,7 @@ binary data
 }
 
 func TestPageDBInsertionErrorPOST(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,
@@ -696,7 +696,7 @@ binary data
 }
 
 func TestPageCreatingFileErrorPOST(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectExec("INSERT INTO files").WithArgs(
 		"filename",
 		11,

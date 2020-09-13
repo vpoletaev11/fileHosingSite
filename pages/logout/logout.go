@@ -1,15 +1,14 @@
 package logout
 
 import (
-	"database/sql"
 	"net/http"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
+	"github.com/vpoletaev11/fileHostingSite/session"
 )
 
 // Page returns HandleFunc that removes user cookie and redirect to login page
-func Page(db *sql.DB) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
@@ -17,13 +16,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		redisConn, err := redis.Dial("tcp", "localhost:6379")
-		if err != nil {
-			panic(err)
-		}
-		defer redisConn.Close()
-
-		_, err = redisConn.Do("DEL", cookie.Value)
+		_, err = dep.Redis.Do("DEL", cookie.Value)
 		if err != nil {
 			errhand.InternalError("logout", "Page", "", err, w)
 			return

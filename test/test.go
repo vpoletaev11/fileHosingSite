@@ -9,12 +9,12 @@ import (
 	"github.com/vpoletaev11/fileHostingSite/session"
 )
 
-// NewDep returns dependencies for pages and sqlmock interface to writting mocks
-func NewDep(t *testing.T) (session.Dependency, sqlmock.Sqlmock) {
+// NewDep returns dependencies for Page()'s and sqlMock and redisMock interfaces to writting mocks
+func NewDep(t *testing.T) (session.Dependency, sqlmock.Sqlmock, *redigomock.Conn) {
 	db, sqlMock, err := sqlmock.New()
 	require.NoError(t, err)
 
-	redisConn := redigomock.NewConn()
+	redisMock := redigomock.NewConn()
 
-	return session.Dependency{Db: db, Redis: redisConn, Username: "username"}, sqlMock
+	return session.Dependency{Db: db, Redis: redisMock, Username: "username"}, sqlMock, redisMock
 }

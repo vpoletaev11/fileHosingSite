@@ -1,16 +1,15 @@
 package login
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/tmp"
 
-	"github.com/vpoletaev11/fileHostingSite/cookie"
 	"github.com/vpoletaev11/fileHostingSite/errhand"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,7 +32,7 @@ type TemplateLog struct {
 }
 
 //Page returns HandleFunc for login[/login] page
-func Page(db *sql.DB) http.HandlerFunc {
+func Page(dep session.Dependency) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// creating template for login page
 		page, err := tmp.CreateTemplate(pathTemplateLogin)
@@ -53,10 +52,10 @@ func Page(db *sql.DB) http.HandlerFunc {
 			return
 		case "POST":
 			// getting username and password from POST request
-			username := r.FormValue("username")
+			dep.Username = r.FormValue("username")
 			password := r.FormValue("password")
 
-			err := usernameValidator(username)
+			err := usernameValidator(dep.Username)
 			if err != nil {
 				templateData := TemplateLog{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
@@ -81,7 +80,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			// query to MySQL database to SELECT password for user.
 			// This query also checks is username exist
 			hashPassDB := ""
-			err = db.QueryRow(selectPass, username).Scan(&hashPassDB)
+			err = dep.Db.QueryRow(selectPass, dep.Username).Scan(&hashPassDB)
 			if err != nil {
 				if err.Error() == "sql: no rows in result set" {
 					templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
@@ -126,7 +125,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			}
 
 			// creating cookie
-			cookie, err := cookie.CreateCookie(username)
+			cookie, err := session.CreateCookie(dep)
 			if err != nil {
 				errhand.InternalError("registration", "Page", "", err, w)
 				return

@@ -23,7 +23,7 @@ type Dependency struct {
 type page func(dep Dependency) http.HandlerFunc
 
 // CreateCookie creates cookie for user
-func CreateCookie(username string, redisConn redis.Conn) (http.Cookie, error) {
+func CreateCookie(dep Dependency) (http.Cookie, error) {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	cookieVal := make([]rune, 60)
 
@@ -40,7 +40,7 @@ func CreateCookie(username string, redisConn redis.Conn) (http.Cookie, error) {
 		Expires: time.Now().Add(CookieLifetime),
 	}
 
-	_, err := redisConn.Do("SET", cookie.Value, username, "EX", CookieLifetime.Seconds())
+	_, err := dep.Redis.Do("SET", cookie.Value, dep.Username, "EX", CookieLifetime.Seconds())
 	if err != nil {
 		return http.Cookie{}, err
 	}

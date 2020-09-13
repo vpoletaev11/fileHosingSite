@@ -18,7 +18,7 @@ import (
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGet(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 
 	fileInfoRows := []string{
 		"id",
@@ -112,7 +112,7 @@ func TestPageSuccessGet(t *testing.T) {
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateIndex
 	newName := "../../" + pathTemplateIndex + "edit"
@@ -147,7 +147,7 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageDBError01Get(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 
 	sqlMock.ExpectQuery("SELECT \\* FROM files ORDER BY uploadDate DESC LIMIT 15;").WithArgs().WillReturnError(fmt.Errorf("testing error"))
 
@@ -167,7 +167,7 @@ func TestPageDBError01Get(t *testing.T) {
 }
 
 func TestPageDBError02Get(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 
 	fileInfoRows := []string{
 		"id",

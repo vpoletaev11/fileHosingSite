@@ -18,7 +18,7 @@ import (
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	sut := Page(dep)
 
 	w := httptest.NewRecorder()
@@ -65,7 +65,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageAnyCategorySuccessGET(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
@@ -159,7 +159,7 @@ func TestPageAnyCategorySuccessGET(t *testing.T) {
 }
 
 func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(rowsInPage * 3))
 
@@ -259,7 +259,7 @@ func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
 }
 
 func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(rowsInPage * 30))
 
@@ -405,7 +405,7 @@ func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
 }
 
 func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(rowsInPage * 30))
 
@@ -541,7 +541,7 @@ func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
 }
 
 func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(rowsInPage * 30))
 
@@ -683,7 +683,7 @@ func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
 // TestPageMissingTemplate tests case when template file is missing.
 // Cannot be runned in parallel.
 func TestPageMissingTemplate(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	// renaming exists template file
 	oldName := "../../" + pathTemplateAnyCategory
 	newName := "../../" + pathTemplateAnyCategory + "edit"
@@ -718,7 +718,7 @@ func TestPageMissingTemplate(t *testing.T) {
 }
 
 func TestPageAnyCategoryWrongCategory(t *testing.T) {
-	dep, _ := test.NewDep(t)
+	dep, _, _ := test.NewDep(t)
 	sut := Page(dep)
 
 	w := httptest.NewRecorder()
@@ -736,7 +736,7 @@ func TestPageAnyCategoryWrongCategory(t *testing.T) {
 }
 
 func TestPageAnyCategoryPagesCountError(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnError(fmt.Errorf("testing error"))
 
 	sut := Page(dep)
@@ -757,7 +757,7 @@ func TestPageAnyCategoryPagesCountError(t *testing.T) {
 }
 
 func TestPageAnyCategoryWrongPage(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
@@ -779,7 +779,7 @@ func TestPageAnyCategoryWrongPage(t *testing.T) {
 }
 
 func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
@@ -801,7 +801,7 @@ func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
 }
 
 func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
@@ -823,7 +823,7 @@ func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
 }
 
 func TestPageAnyCategorySuccessFileInfoGatheringError(t *testing.T) {
-	dep, sqlMock := test.NewDep(t)
+	dep, sqlMock, _ := test.NewDep(t)
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 

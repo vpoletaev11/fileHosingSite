@@ -1,25 +1,25 @@
 package logout
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 // TestSuccess checks workability Page()
 func TestSuccess(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	require.NoError(t, err)
-	sqlMock.ExpectExec("DELETE").WithArgs("test").WillReturnResult(sqlmock.NewResult(1, 1))
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("DEL", redigomock.NewAnyData())
 
-	sut := Page(db)
+	sut := Page(dep)
 
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	inHandlerCookie := &http.Cookie{
@@ -46,12 +46,10 @@ func TestSuccess(t *testing.T) {
 
 // TestDBError checks workability of error handler for database queryer
 func TestDBError(t *testing.T) {
-	db, sqlMock, err := sqlmock.New()
-	sqlMock.ExpectExec("DELETE").WithArgs("test").WillReturnError(errors.New("DB Error"))
+	dep, _, redisMock := test.NewDep(t)
+	redisMock.Command("DEL", redigomock.NewAnyData()).ExpectError(fmt.Errorf("Testing error"))
 
-	require.NoError(t, err)
-
-	sut := Page(db)
+	sut := Page(dep)
 
 	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	cookie := &http.Cookie{
@@ -74,8 +72,9 @@ func TestDBError(t *testing.T) {
 
 // TestNoCookie checks workability of error handler for cookie handler
 func TestNoCookie(t *testing.T) {
+	dep, _, _ := test.NewDep(t)
 	// db is not used in this test
-	sut := Page(nil)
+	sut := Page(dep)
 
 	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	require.NoError(t, err)

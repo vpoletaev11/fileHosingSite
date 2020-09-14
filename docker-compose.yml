@@ -8,6 +8,7 @@ services:
             - 8080:8080
         links:
             - mysql
+            - redis
     mysql:
         image: mysql/mysql-server:5.6
         container_name: mysql
@@ -20,3 +21,8 @@ services:
         command: --init-file /data/application/init.sql
         volumes:
             - ./init.sql:/data/application/init.sql
+    redis:
+        image: redis
+        container_name: redis
+        ports:
+            - "6379:6379"

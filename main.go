@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	mySQLAddr = "user:@tcp(localhost:3306)"
-	redisAddr = "localhost:6379"
+	mySQLAddr = "user:@tcp(localhost:3306)" // docker: root:@tcp(mysql:3306)
+	redisAddr = "localhost:6379"            // docker: redis:6379
 )
 
 func main() {

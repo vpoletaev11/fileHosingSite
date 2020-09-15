@@ -2,15 +2,12 @@ package popular_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/pages/popular"
 	"github.com/vpoletaev11/fileHostingSite/test"
@@ -49,12 +46,7 @@ func TestPageSuccessGet(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -102,7 +94,7 @@ func TestPageSuccessGet(t *testing.T) {
                 
         </table>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageDBError01Get(t *testing.T) {
@@ -117,12 +109,7 @@ func TestPageDBError01Get(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageDBError02Get(t *testing.T) {
@@ -158,10 +145,5 @@ func TestPageDBError02Get(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }

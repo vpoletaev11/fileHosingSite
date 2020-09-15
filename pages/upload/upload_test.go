@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/pages/upload"
 	"github.com/vpoletaev11/fileHostingSite/test"
@@ -41,13 +39,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -88,7 +80,7 @@ func TestPageSuccessGET(t *testing.T) {
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageSuccessPOST(t *testing.T) {
@@ -138,10 +130,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -182,7 +171,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageErrorFileReceptionPOST(t *testing.T) {
@@ -226,10 +215,7 @@ other
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageEmptyFilenameSuccessPOST(t *testing.T) {
@@ -279,10 +265,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -323,7 +306,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageLargeFilenameErrorPOST(t *testing.T) {
@@ -360,10 +343,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -404,7 +384,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageLargeDescriptionErrorPOST(t *testing.T) {
@@ -441,10 +421,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -485,7 +462,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageWrongCategoryErrorPOST(t *testing.T) {
@@ -522,10 +499,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -566,7 +540,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageDBInsertionErrorPOST(t *testing.T) {
@@ -612,10 +586,7 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -656,7 +627,7 @@ binary data
         </form>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageCreatingFileErrorPOST(t *testing.T) {
@@ -702,8 +673,5 @@ binary data
 	sut := upload.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }

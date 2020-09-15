@@ -3,8 +3,6 @@ package registration_test
 import (
 	"database/sql/driver"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -16,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/pages/registration"
+	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
 type anyString struct{}
@@ -41,13 +40,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -496,7 +489,7 @@ func TestPageSuccessGET(t *testing.T) {
                 
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageSuccessPost checks workability of POST requests handler in Page()
@@ -541,10 +534,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -993,7 +983,7 @@ func TestPageEmptyUsername(t *testing.T) {
                 <h2 style="color:red">Username cannot be empty</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageEmptyPassword1 tests case when password1 is empty.
@@ -1013,10 +1003,7 @@ func TestPageEmptyPassword1(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -1465,7 +1452,7 @@ func TestPageEmptyPassword1(t *testing.T) {
                 <h2 style="color:red">Password cannot be empty</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageEmptyPassword2 tests case when password2 is empty.
@@ -1485,10 +1472,7 @@ func TestPageEmptyPassword2(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -1937,7 +1921,7 @@ func TestPageEmptyPassword2(t *testing.T) {
                 <h2 style="color:red">Password cannot be empty</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageLargerUsername tests case when len(username) > 20.
@@ -1957,10 +1941,7 @@ func TestPageLargerUsername(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -2409,7 +2390,7 @@ func TestPageLargerUsername(t *testing.T) {
                 <h2 style="color:red">Username cannot be longer than 20 characters</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageLargerPassword1 tests case when len(password1) > 40.
@@ -2429,10 +2410,7 @@ func TestPageLargerPassword1(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -2881,7 +2859,7 @@ func TestPageLargerPassword1(t *testing.T) {
                 <h2 style="color:red">Password cannot be longer than 40 characters</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageLargerPassword2 tests case when len(password2) > 40.
@@ -2901,10 +2879,7 @@ func TestPageLargerPassword2(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -3353,7 +3328,7 @@ func TestPageLargerPassword2(t *testing.T) {
                 <h2 style="color:red">Password cannot be longer than 40 characters</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageNonLowerCaseUsername tests case when username is non lower-case
@@ -3373,10 +3348,7 @@ func TestPageNonLowerCaseUsernam(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -3825,7 +3797,7 @@ func TestPageNonLowerCaseUsernam(t *testing.T) {
                 <h2 style="color:red">Please use lower case username</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageMismatchingPasswords tests case when password1 != password2
@@ -3845,10 +3817,7 @@ func TestPageMismatchingPasswords(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -4297,7 +4266,7 @@ func TestPageMismatchingPasswords(t *testing.T) {
                 <h2 style="color:red">Passwords doesn't match</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageNotUniqueUsername tests case when username already exists in MySQL database
@@ -4322,10 +4291,7 @@ func TestPageNotUniqueUsername(t *testing.T) {
 	sut := registration.Page(db)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -4774,7 +4740,7 @@ func TestPageNotUniqueUsername(t *testing.T) {
                 <h2 style="color:red">Username already used</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 // TestPageUsernameInsertionDBInternalError tests case when username insertion in MySQL database unreachable because of internal error.
@@ -4799,10 +4765,7 @@ func TestPageUsernameInsertionDBInternalError(t *testing.T) {
 	sut := registration.Page(db)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -5251,7 +5214,7 @@ func TestPageUsernameInsertionDBInternalError(t *testing.T) {
                 <h2 style="color:red">INTERNAL ERROR. Please try later</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 func TestPageNonSelectedTimezoneError(t *testing.T) {
@@ -5271,10 +5234,7 @@ func TestPageNonSelectedTimezoneError(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -5723,7 +5683,7 @@ func TestPageNonSelectedTimezoneError(t *testing.T) {
                 <h2 style="color:red">Please set your timezone</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 func TestPageEmptyTimezoneError(t *testing.T) {
@@ -5743,10 +5703,7 @@ func TestPageEmptyTimezoneError(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -6195,7 +6152,7 @@ func TestPageEmptyTimezoneError(t *testing.T) {
                 <h2 style="color:red">Incorrect timezone</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }
 
 func TestPageWrongTimezoneError(t *testing.T) {
@@ -6215,10 +6172,7 @@ func TestPageWrongTimezoneError(t *testing.T) {
 	sut := registration.Page(nil)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 
 <head>
@@ -6667,5 +6621,5 @@ func TestPageWrongTimezoneError(t *testing.T) {
                 <h2 style="color:red">Incorrect timezone</h2>
             </form>
         </div>
-    </body>`, bodyString)
+    </body>`, w.Body)
 }

@@ -3,8 +3,6 @@ package login_test
 import (
 	"database/sql/driver"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -60,14 +58,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -84,7 +75,7 @@ func TestPageSuccessGET(t *testing.T) {
             
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageSuccessPost checks workability of POST requests handler in Page()
@@ -109,15 +100,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	sut(w, r)
 
 	assert.Equal(t, http.StatusFound, w.Code)
-
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "", bodyString)
-
+	test.AssertBodyEqual(t, "", w.Body)
 	assert.Equal(t, "/", w.Header().Get("Location"))
 
 	fromHandlerCookie := w.Result().Cookies()
@@ -141,10 +124,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	sut := login.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -161,7 +141,7 @@ func TestPageEmptyUsername(t *testing.T) {
             <h2 style="color:red">Username cannot be empty</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageEmptyPassword tests case when password is empty.
@@ -180,10 +160,7 @@ func TestPageEmptyPassword(t *testing.T) {
 	sut := login.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -200,7 +177,7 @@ func TestPageEmptyPassword(t *testing.T) {
             <h2 style="color:red">Password cannot be empty</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageLargerUsername tests case when len(username) > 20.
@@ -219,10 +196,7 @@ func TestPageLargerUsername(t *testing.T) {
 	sut := login.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -239,7 +213,7 @@ func TestPageLargerUsername(t *testing.T) {
             <h2 style="color:red">Username cannot be longer than 20 characters</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageLargerPassword tests case when len(password) > 20.
@@ -258,10 +232,7 @@ func TestPageLargerPassword(t *testing.T) {
 	sut := login.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -278,7 +249,7 @@ func TestPageLargerPassword(t *testing.T) {
             <h2 style="color:red">Password cannot be longer than 40 characters</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageNonLowerCaseUsername tests case when username is non lower-case
@@ -297,10 +268,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 	sut := login.Page(dep)
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -317,7 +285,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
             <h2 style="color:red">Please use lower case username</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageQuerySelectErr tests case when SELECT query returns error
@@ -339,14 +307,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 	sut(w, r)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -363,7 +324,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
             <h2 style="color:red">INTERNAL ERROR. Please try later</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageSELECTReturnsEmptyPass tests case when SELECT query returns empty password
@@ -386,14 +347,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -410,7 +364,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
             <h2 style="color:red">Wrong username or password</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPagePassordNotFound(t *testing.T) {
@@ -431,14 +385,7 @@ func TestPagePassordNotFound(t *testing.T) {
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -455,7 +402,7 @@ func TestPagePassordNotFound(t *testing.T) {
             <h2 style="color:red">Wrong username or password</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageComparePasswordsDoesntMatch tests case when comparePasswords() gets not matched password with hashed password and returns error
@@ -479,13 +426,7 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -502,5 +443,5 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
             <h2 style="color:red">Wrong username or password</h2>
         </form>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }

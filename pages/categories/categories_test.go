@@ -2,15 +2,12 @@ package categories_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/pages/categories"
 	"github.com/vpoletaev11/fileHostingSite/test"
@@ -31,14 +28,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -64,7 +54,7 @@ func TestPageSuccessGET(t *testing.T) {
         <li><a href="/categories/projects" class="categoryLink">Projects</a></li>
         <li><a href="/categories/music" class="categoryLink">Music</a></li>
     </ul>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
@@ -106,12 +96,7 @@ func TestPageAnyCategorySuccessGET(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -159,7 +144,7 @@ func TestPageAnyCategorySuccessGET(t *testing.T) {
     <div class="pagesNums">
         
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
@@ -200,12 +185,7 @@ func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -259,7 +239,7 @@ func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
         <a href=/categories/other?p&#61;3>3</a>
         
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
@@ -300,12 +280,7 @@ func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -405,7 +380,7 @@ func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
         <a href=/categories/other?p&#61;30>30</a>
         
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
@@ -446,12 +421,7 @@ func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -541,7 +511,7 @@ func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
         <a href=/categories/other?p&#61;30>30</a>
         
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
@@ -582,12 +552,7 @@ func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -681,7 +646,7 @@ func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
         <a href=/categories/other?p&#61;30>30</a>
         
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageAnyCategoryWrongCategory(t *testing.T) {
@@ -694,12 +659,7 @@ func TestPageAnyCategoryWrongCategory(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	t.Log(bodyString)
-	assert.Equal(t, "ERROR: Incorrect category\n", bodyString)
+	test.AssertBodyEqual(t, "ERROR: Incorrect category\n", w.Body)
 }
 
 func TestPageAnyCategoryPagesCountError(t *testing.T) {
@@ -716,11 +676,7 @@ func TestPageAnyCategoryPagesCountError(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageAnyCategoryWrongPage(t *testing.T) {
@@ -738,11 +694,7 @@ func TestPageAnyCategoryWrongPage(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+	test.AssertBodyEqual(t, "ERROR: Incorrect get request\n", w.Body)
 }
 
 func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
@@ -760,11 +712,7 @@ func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+	test.AssertBodyEqual(t, "ERROR: Incorrect get request\n", w.Body)
 }
 
 func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
@@ -782,11 +730,7 @@ func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "ERROR: Incorrect get request\n", bodyString)
+	test.AssertBodyEqual(t, "ERROR: Incorrect get request\n", w.Body)
 }
 
 func TestPageAnyCategorySuccessFileInfoGatheringError(t *testing.T) {
@@ -806,9 +750,5 @@ func TestPageAnyCategorySuccessFileInfoGatheringError(t *testing.T) {
 	err = sqlMock.ExpectationsWereMet()
 	require.NoError(t, err)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }

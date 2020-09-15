@@ -2,8 +2,6 @@ package download_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,7 +11,6 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vpoletaev11/fileHostingSite/pages/download"
 	"github.com/vpoletaev11/fileHostingSite/test"
@@ -57,14 +54,7 @@ func TestPageSuccessGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	// html text uses spaces instead of tabs
-	assert.Equal(t, `<!doctype html>
+	test.AssertBodyEqual(t, `<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -126,7 +116,7 @@ func TestPageSuccessGET(t *testing.T) {
             <a href="/files/1" download=><h1>download</h1></a>
         </div>
     </div>
-</body>`, bodyString)
+</body>`, w.Body)
 }
 
 func TestPageSettingRatingSuccessPOST(t *testing.T) {
@@ -154,13 +144,7 @@ func TestPageSettingRatingSuccessPOST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "", bodyString)
+	test.AssertBodyEqual(t, "", w.Body)
 }
 
 func TestPageUpdatingRatingSuccessPOST(t *testing.T) {
@@ -195,13 +179,7 @@ func TestPageUpdatingRatingSuccessPOST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "", bodyString)
+	test.AssertBodyEqual(t, "", w.Body)
 }
 
 func TestPageUpdatingRatingSameRatingSuccessPOST(t *testing.T) {
@@ -227,13 +205,7 @@ func TestPageUpdatingRatingSameRatingSuccessPOST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "", bodyString)
+	test.AssertBodyEqual(t, "", w.Body)
 }
 
 func TestPageUpdatingRatingsDBError01POST(t *testing.T) {
@@ -254,13 +226,7 @@ func TestPageUpdatingRatingsDBError01POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageUpdatingRatingsDBError02POST(t *testing.T) {
@@ -287,13 +253,7 @@ func TestPageUpdatingRatingsDBError02POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageUpdatingRatingsDBError03POST(t *testing.T) {
@@ -321,13 +281,7 @@ func TestPageUpdatingRatingsDBError03POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageUpdatingRatingsDBError04POST(t *testing.T) {
@@ -356,13 +310,7 @@ func TestPageUpdatingRatingsDBError04POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageUpdatingRatingsDBError05POST(t *testing.T) {
@@ -397,13 +345,7 @@ func TestPageUpdatingRatingsDBError05POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageDBFileInfoGatheringErrorGET(t *testing.T) {
@@ -418,13 +360,7 @@ func TestPageDBFileInfoGatheringErrorGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
@@ -460,13 +396,7 @@ func TestPageDBFTimezoneGatheringErrorGET(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageIncorrectPOSTParameter01(t *testing.T) {
@@ -484,13 +414,7 @@ func TestPageIncorrectPOSTParameter01(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+	test.AssertBodyEqual(t, "INCORRECT POST PARAMETER\n", w.Body)
 }
 
 func TestPageIncorrectPOSTParameter02(t *testing.T) {
@@ -508,13 +432,7 @@ func TestPageIncorrectPOSTParameter02(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+	test.AssertBodyEqual(t, "INCORRECT POST PARAMETER\n", w.Body)
 }
 
 func TestPageIncorrectPOSTParameter03(t *testing.T) {
@@ -532,13 +450,7 @@ func TestPageIncorrectPOSTParameter03(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INCORRECT POST PARAMETER\n", bodyString)
+	test.AssertBodyEqual(t, "INCORRECT POST PARAMETER\n", w.Body)
 }
 
 func TestPageSetRatingError01POST(t *testing.T) {
@@ -558,13 +470,7 @@ func TestPageSetRatingError01POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageSetRatingError02POST(t *testing.T) {
@@ -585,13 +491,7 @@ func TestPageSetRatingError02POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageSetRatingError03POST(t *testing.T) {
@@ -613,13 +513,7 @@ func TestPageSetRatingError03POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 func TestPageSetRatingError04POST(t *testing.T) {
@@ -647,11 +541,5 @@ func TestPageSetRatingError04POST(t *testing.T) {
 
 	sut(w, r)
 
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bodyString := string(bodyBytes)
-
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }

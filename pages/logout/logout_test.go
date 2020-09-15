@@ -2,7 +2,6 @@ package logout_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,10 +34,7 @@ func TestSuccess(t *testing.T) {
 
 	sut(w, r)
 	assert.Equal(t, http.StatusFound, w.Code)
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "<a href=\"/login\">Found</a>.\n\n", bodyString)
+	test.AssertBodyEqual(t, "<a href=\"/login\">Found</a>.\n\n", w.Body)
 
 	fromHandlerCookie := w.Result().Cookies()
 	assert.Equal(t, fromHandlerCookie[0].Name, "session_id")
@@ -65,16 +61,13 @@ func TestDBError(t *testing.T) {
 
 	sut(w, req)
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 // TestNoCookie checks workability of error handler for cookie handler
 func TestNoCookie(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
-	// db is not used in this test
+	
 	sut := logout.Page(dep)
 
 	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)

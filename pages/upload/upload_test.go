@@ -1,4 +1,4 @@
-package upload
+package upload_test
 
 import (
 	"database/sql/driver"
@@ -14,6 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/pages/upload"
 	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
@@ -33,7 +34,7 @@ func (a anyTime) Match(v driver.Value) bool {
 
 func TestPageSuccessGET(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
 	require.NoError(t, err)
@@ -134,7 +135,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -184,43 +185,6 @@ binary data
 </body>`, bodyString)
 }
 
-// TestPageMissingTemplate tests case when template file is missing.
-// Cannot be runned in parallel.
-func TestPageMissingTemplate(t *testing.T) {
-	dep, _, _ := test.NewDep(t)
-	// renaming exists template file
-	oldName := "../../" + pathTemplateUpload
-	newName := "../../" + pathTemplateUpload + "edit"
-	err := os.Rename(oldName, newName)
-	require.NoError(t, err)
-	lenOrigName := len(oldName)
-
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/upload", nil)
-	require.NoError(t, err)
-
-	// running of the page handler with un-exists template file
-	sut := Page(dep)
-	sut(w, r)
-
-	assert.Equal(t, 500, w.Code)
-
-	// renaming template file to original filename
-	defer func() {
-		// renaming template file to original filename
-		oldName = newName
-		newName = oldName[:lenOrigName]
-		err = os.Rename(oldName, newName)
-		require.NoError(t, err)
-	}()
-
-	// checking error handler works correct
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
-}
-
 func TestPageErrorFileReceptionPOST(t *testing.T) {
 	dep, sqlMock, _ := test.NewDep(t)
 	// changing directory because of test are not containing in root folder
@@ -259,7 +223,7 @@ other
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -312,7 +276,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -393,7 +357,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -474,7 +438,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -555,7 +519,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -645,7 +609,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -735,7 +699,7 @@ binary data
 
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := upload.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)

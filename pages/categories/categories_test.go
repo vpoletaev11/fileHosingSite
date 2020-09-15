@@ -1,4 +1,4 @@
-package categories
+package categories_test
 
 import (
 	"fmt"
@@ -6,20 +6,24 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/pages/categories"
 	"github.com/vpoletaev11/fileHostingSite/test"
+)
+
+const (
+	rowsInPage = 15 // how many rows of file info will be displayed on page
 )
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/", nil)
@@ -92,7 +96,7 @@ func TestPageAnyCategorySuccessGET(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
@@ -186,7 +190,7 @@ func TestPageAnyCategoryFewPagesInPageBarSuccess(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
@@ -286,7 +290,7 @@ func TestPageAnyCategoryAlotPagesInPageBarSuccess(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
@@ -432,7 +436,7 @@ func TestPageAnyCategoryAlotPagesInPageBarDefaultCaseSuccess(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=16", nil)
@@ -568,7 +572,7 @@ func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
 	))
 	sqlMock.ExpectQuery("SELECT timezone FROM users WHERE username =").WithArgs("username").WillReturnRows(sqlmock.NewRows([]string{"timezone"}).AddRow("Europe/Moscow"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=11", nil)
@@ -680,46 +684,9 @@ func TestPageAnyCategoryAlotPagesInPagesBarNumPage1Success(t *testing.T) {
 </body>`, bodyString)
 }
 
-// TestPageMissingTemplate tests case when template file is missing.
-// Cannot be runned in parallel.
-func TestPageMissingTemplate(t *testing.T) {
-	dep, _, _ := test.NewDep(t)
-	// renaming exists template file
-	oldName := "../../" + pathTemplateAnyCategory
-	newName := "../../" + pathTemplateAnyCategory + "edit"
-	err := os.Rename(oldName, newName)
-	require.NoError(t, err)
-	lenOrigName := len(oldName)
-
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
-	require.NoError(t, err)
-
-	// running of the page handler with un-exists template file
-	sut := Page(dep)
-	sut(w, r)
-
-	assert.Equal(t, 500, w.Code)
-
-	// renaming template file to original filename
-	defer func() {
-		// renaming template file to original filename
-		oldName = newName
-		newName = oldName[:lenOrigName]
-		err = os.Rename(oldName, newName)
-		require.NoError(t, err)
-	}()
-
-	// checking error handler works correct
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
-}
-
 func TestPageAnyCategoryWrongCategory(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/wrongCategory", nil)
@@ -739,7 +706,7 @@ func TestPageAnyCategoryPagesCountError(t *testing.T) {
 	dep, sqlMock, _ := test.NewDep(t)
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)
@@ -761,7 +728,7 @@ func TestPageAnyCategoryWrongPage(t *testing.T) {
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=wrongPage", nil)
@@ -783,7 +750,7 @@ func TestPageAnyCategoryWrongPageLowerThanZero(t *testing.T) {
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=-1", nil)
@@ -805,7 +772,7 @@ func TestPageAnyCategoryNumPageBiggerThanPagesCount(t *testing.T) {
 	row := []string{"count"}
 	sqlMock.ExpectQuery("SELECT COUNT").WithArgs("other").WillReturnRows(sqlmock.NewRows(row).AddRow(1))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other?p=100", nil)
@@ -829,7 +796,7 @@ func TestPageAnyCategorySuccessFileInfoGatheringError(t *testing.T) {
 
 	sqlMock.ExpectQuery("SELECT \\* FROM files WHERE category =").WithArgs("other", 0, 15).WillReturnError(fmt.Errorf("testing error"))
 
-	sut := Page(dep)
+	sut := categories.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/categories/other", nil)

@@ -1,4 +1,4 @@
-package logout
+package logout_test
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/pages/logout"
 	"github.com/vpoletaev11/fileHostingSite/test"
 )
 
@@ -19,7 +20,7 @@ func TestSuccess(t *testing.T) {
 	dep, _, redisMock := test.NewDep(t)
 	redisMock.Command("DEL", redigomock.NewAnyData())
 
-	sut := Page(dep)
+	sut := logout.Page(dep)
 
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	inHandlerCookie := &http.Cookie{
@@ -49,7 +50,7 @@ func TestDBError(t *testing.T) {
 	dep, _, redisMock := test.NewDep(t)
 	redisMock.Command("DEL", redigomock.NewAnyData()).ExpectError(fmt.Errorf("Testing error"))
 
-	sut := Page(dep)
+	sut := logout.Page(dep)
 
 	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	cookie := &http.Cookie{
@@ -74,7 +75,7 @@ func TestDBError(t *testing.T) {
 func TestNoCookie(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
 	// db is not used in this test
-	sut := Page(dep)
+	sut := logout.Page(dep)
 
 	req, err := http.NewRequest(http.MethodGet, "http://localhost/logout", nil)
 	require.NoError(t, err)

@@ -1,4 +1,4 @@
-package registration
+package registration_test
 
 import (
 	"database/sql/driver"
@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,7 +15,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/vpoletaev11/fileHostingSite/pages/registration"
 )
 
 type anyString struct{}
@@ -27,7 +26,7 @@ func (a anyString) Match(v driver.Value) bool {
 	if !ok {
 		return false
 	}
-	if !(len(v.(string)) == 60) {
+	if len(v.(string)) != 60 {
 		return false
 	}
 	return true
@@ -35,7 +34,7 @@ func (a anyString) Match(v driver.Value) bool {
 
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/registration", nil)
 	require.NoError(t, err)
@@ -519,46 +518,10 @@ func TestPageSuccessPost(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := registration.Page(db)
 	sut(w, r)
 
 	assert.Equal(t, "/login", w.Header().Get("Location"))
-}
-
-// TestPageMissingTemplate tests case when template file is missing.
-// Cannot be runned in parallel.
-func TestPageMissingTemplate(t *testing.T) {
-	// renaming exists template file
-	oldName := "../../" + pathTemplateRegistration
-	newName := "../../" + pathTemplateRegistration + "edit"
-	err := os.Rename(oldName, newName)
-	require.NoError(t, err)
-	lenOrigName := len(oldName)
-
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/registration", nil)
-	require.NoError(t, err)
-
-	// running of the page handler with un-exists template file
-	sut := Page(nil)
-	sut(w, r)
-
-	assert.Equal(t, 500, w.Code)
-
-	// renaming template file to original filename
-	defer func() {
-		// renaming template file to original filename
-		oldName = newName
-		newName = oldName[:lenOrigName]
-		err = os.Rename(oldName, newName)
-		require.NoError(t, err)
-	}()
-
-	// checking error handler works correct
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
 }
 
 // TestPageEmptyUsername tests case when username is empty.
@@ -575,7 +538,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -1047,7 +1010,7 @@ func TestPageEmptyPassword1(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -1519,7 +1482,7 @@ func TestPageEmptyPassword2(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -1991,7 +1954,7 @@ func TestPageLargerUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -2463,7 +2426,7 @@ func TestPageLargerPassword1(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -2935,7 +2898,7 @@ func TestPageLargerPassword2(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -3407,7 +3370,7 @@ func TestPageNonLowerCaseUsernam(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -3879,7 +3842,7 @@ func TestPageMismatchingPasswords(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -4356,7 +4319,7 @@ func TestPageNotUniqueUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := registration.Page(db)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -4833,7 +4796,7 @@ func TestPageUsernameInsertionDBInternalError(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(db)
+	sut := registration.Page(db)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -5305,7 +5268,7 @@ func TestPageNonSelectedTimezoneError(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -5777,7 +5740,7 @@ func TestPageEmptyTimezoneError(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -6249,7 +6212,7 @@ func TestPageWrongTimezoneError(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(nil)
+	sut := registration.Page(nil)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -6705,13 +6668,4 @@ func TestPageWrongTimezoneError(t *testing.T) {
             </form>
         </div>
     </body>`, bodyString)
-}
-
-func TestHashAndSaltSuccess(t *testing.T) {
-	plainPass := "password"
-	hashedPass, err := hashAndSalt(plainPass)
-	require.NoError(t, err)
-
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(plainPass))
-	require.NoError(t, err)
 }

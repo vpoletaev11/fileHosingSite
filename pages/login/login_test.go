@@ -1,4 +1,4 @@
-package login
+package login_test
 
 import (
 	"database/sql/driver"
@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"github.com/rafaeljusto/redigomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vpoletaev11/fileHostingSite/pages/login"
 	"github.com/vpoletaev11/fileHostingSite/session"
 	"github.com/vpoletaev11/fileHostingSite/test"
 )
@@ -29,7 +29,7 @@ func (a anyString) Match(v driver.Value) bool {
 	if !ok {
 		return false
 	}
-	if !(len(v.(string)) == 60) {
+	if len(v.(string)) != 60 {
 		return false
 	}
 	return true
@@ -52,7 +52,7 @@ func (a anyTime) Match(v driver.Value) bool {
 // TestPageSuccessGET checks workability of GET requests handler in Page()
 func TestPageSuccessGET(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
-	sut := Page(dep)
+	sut := login.Page(dep)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest(http.MethodGet, "http://localhost/login", nil)
@@ -105,7 +105,7 @@ func TestPageSuccessPOST(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusFound, w.Code)
@@ -125,43 +125,6 @@ func TestPageSuccessPOST(t *testing.T) {
 	assert.Equal(t, len(fromHandlerCookie[0].Value), 60)
 }
 
-// TestPageMissingTemplate tests case when template file is missing.
-// Cannot be runned in parallel.
-func TestPageMissingTemplate(t *testing.T) {
-	dep, _, _ := test.NewDep(t)
-	// renaming exists template file
-	oldName := "../../" + pathTemplateLogin
-	newName := "../../" + pathTemplateLogin + "edit"
-	err := os.Rename(oldName, newName)
-	require.NoError(t, err)
-	lenOrigName := len(oldName)
-
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest(http.MethodGet, "http://localhost/login", nil)
-	require.NoError(t, err)
-
-	// running of the page handler with un-exists template file
-	sut := Page(dep)
-	sut(w, r)
-
-	assert.Equal(t, 500, w.Code)
-
-	// renaming template file to original filename
-	defer func() {
-		// renaming template file to original filename
-		oldName = newName
-		newName = oldName[:lenOrigName]
-		err = os.Rename(oldName, newName)
-		require.NoError(t, err)
-	}()
-
-	// checking error handler works correct
-	bodyBytes, err := ioutil.ReadAll(w.Body)
-	require.NoError(t, err)
-	bodyString := string(bodyBytes)
-	assert.Equal(t, "INTERNAL ERROR. Please try later\n", bodyString)
-}
-
 // TestPageEmptyUsername tests case when username is empty.
 func TestPageEmptyUsername(t *testing.T) {
 	dep, _, _ := test.NewDep(t)
@@ -175,7 +138,7 @@ func TestPageEmptyUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -214,7 +177,7 @@ func TestPageEmptyPassword(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -253,7 +216,7 @@ func TestPageLargerUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -292,7 +255,7 @@ func TestPageLargerPassword(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -331,7 +294,7 @@ func TestPageNonLowerCaseUsername(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	bodyBytes, err := ioutil.ReadAll(w.Body)
@@ -372,7 +335,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -419,7 +382,7 @@ func TestPageSELECTReturnsEmptyPass(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -464,7 +427,7 @@ func TestPagePassordNotFound(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -511,7 +474,7 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	w := httptest.NewRecorder()
 
-	sut := Page(dep)
+	sut := login.Page(dep)
 	sut(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -540,27 +503,4 @@ func TestPageComparePasswordsDoesntMatch(t *testing.T) {
         </form>
     </div>
 </body>`, bodyString)
-}
-
-// tests for comparePasswords():
-
-func TestComparePasswordSuccess(t *testing.T) {
-	plainPass := "example"
-	hashedPass := "$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"
-
-	err := comparePasswords(hashedPass, plainPass)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestComparePasswordError(t *testing.T) {
-	plainPass := "example_changed"
-	hashedPass := "$2a$10$ITkHbQjRK6AWs.InpysH5em2Lx4jwzmyYOpvFSturS7hRe6oxzUAu"
-
-	err := comparePasswords(hashedPass, plainPass)
-	if err != nil {
-		return
-	}
-	t.Error("comparePassword doesn't return error when password and hash doesn't match")
 }

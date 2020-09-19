@@ -29,20 +29,20 @@ func Page(dep session.Dependency) http.HandlerFunc {
 		// creating template for categories page
 		page, err := tmp.CreateTemplate(pathTemplatePopular)
 		if err != nil {
-			errhand.InternalError("popular", "Page", dep.Username, err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			fiCollection, err := dbformat.FormatedFilesInfo(dep.Username, dep.Db, selectFileInfo)
 			if err != nil {
-				errhand.InternalError("popular", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 
 			err = page.Execute(w, TemplatePopular{Username: dep.Username, UploadedFiles: fiCollection})
 			if err != nil {
-				errhand.InternalError("popular", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			return

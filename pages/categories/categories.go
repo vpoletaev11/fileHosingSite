@@ -57,7 +57,7 @@ type numLink struct {
 func anyCategoryPageHandler(dep session.Dependency, w http.ResponseWriter, r *http.Request) {
 	page, err := tmp.CreateTemplate(pathTemplateAnyCategory)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
+		errhand.InternalError(err, w)
 		return
 	}
 
@@ -74,7 +74,7 @@ func anyCategoryPageHandler(dep session.Dependency, w http.ResponseWriter, r *ht
 	// getting count of pages
 	pagesCount, err := pagesCount(dep.Db, category)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
+		errhand.InternalError(err, w)
 		return
 	}
 
@@ -93,14 +93,14 @@ func anyCategoryPageHandler(dep session.Dependency, w http.ResponseWriter, r *ht
 	// getting files info for current page
 	fiCollection, err := dbformat.FormatedFilesInfo(dep.Username, dep.Db, selectFileInfo, category, (numPage-1)*rowsInPage, numPage*rowsInPage)
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
+		errhand.InternalError(err, w)
 		return
 	}
 
 	if pagesCount == 1 {
 		err := page.Execute(w, TemplateAnyCategory{Username: dep.Username, UploadedFiles: fiCollection, Title: r.URL.Path[len("/categories/"):]})
 		if err != nil {
-			errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		return
@@ -110,7 +110,7 @@ func anyCategoryPageHandler(dep session.Dependency, w http.ResponseWriter, r *ht
 	numsLinks := navigationBar(pagesCount, numPage, category)
 	err = page.Execute(w, TemplateAnyCategory{Username: dep.Username, UploadedFiles: fiCollection, LinkList: numsLinks, Title: r.URL.Path[len("/categories/"):]})
 	if err != nil {
-		errhand.InternalError("categories", "anyCategoryPageHandler", dep.Username, err, w)
+		errhand.InternalError(err, w)
 		return
 	}
 	return
@@ -122,7 +122,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 		// creating template for categories page
 		page, err := tmp.CreateTemplate(pathTemplateCategories)
 		if err != nil {
-			errhand.InternalError("categories", "Page", dep.Username, err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		switch r.Method {
@@ -130,7 +130,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 			if r.URL.Path[len("/categories/"):] == "" {
 				err := page.Execute(w, TemplateCategories{Username: dep.Username})
 				if err != nil {
-					errhand.InternalError("categories", "Page", dep.Username, err, w)
+					errhand.InternalError(err, w)
 				}
 				return
 			}

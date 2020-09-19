@@ -54,7 +54,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 		// creating template for categories page
 		page, err := tmp.CreateTemplate(pathTemplateDownload)
 		if err != nil {
-			errhand.InternalError("download", "Page", dep.Username, err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		switch r.Method {
@@ -63,13 +63,13 @@ func Page(dep session.Dependency) http.HandlerFunc {
 
 			fi, err := dbformat.FormatedDownloadFileInfo(dep.Username, dep.Db, fileInfoDB, fileID)
 			if err != nil {
-				errhand.InternalError("download", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 
 			err = page.Execute(w, TemplateDownload{Username: dep.Username, FileInfo: fi})
 			if err != nil {
-				errhand.InternalError("download", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			return
@@ -94,14 +94,14 @@ func Page(dep session.Dependency) http.HandlerFunc {
 
 			alreadyRated, err := setRating(dep.Db, id, dep.Username, rating)
 			if err != nil {
-				errhand.InternalError("download", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 
 			if alreadyRated {
 				err := changeRating(dep.Db, rating, id, dep.Username)
 				if err != nil {
-					errhand.InternalError("download", "Page", dep.Username, err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 			}

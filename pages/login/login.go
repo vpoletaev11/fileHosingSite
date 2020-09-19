@@ -37,7 +37,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 		// creating template for login page
 		page, err := tmp.CreateTemplate(pathTemplateLogin)
 		if err != nil {
-			errhand.InternalError("login", "Page", "", err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		switch r.Method {
@@ -46,7 +46,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 			templateData := TemplateLog{Warning: ""}
 			err := page.Execute(w, templateData)
 			if err != nil {
-				errhand.InternalError("login", "Page", "", err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			return
@@ -60,7 +60,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 				templateData := TemplateLog{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -71,7 +71,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 				templateData := TemplateLog{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -86,7 +86,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 					templateData := TemplateLog{"<h2 style=\"color:red\">Wrong username or password</h2>"}
 					err := page.Execute(w, templateData)
 					if err != nil {
-						errhand.InternalError("registration", "Page", "", err, w)
+						errhand.InternalError(err, w)
 						return
 					}
 					return
@@ -95,7 +95,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -106,7 +106,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -118,7 +118,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">Wrong username or password</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -127,7 +127,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 			// creating cookie
 			cookie, err := session.CreateCookie(dep)
 			if err != nil {
-				errhand.InternalError("registration", "Page", "", err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			// sending cookie

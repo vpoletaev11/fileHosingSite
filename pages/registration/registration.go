@@ -36,7 +36,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 		// creating template for register page
 		page, err := tmp.CreateTemplate(pathTemplateRegistration)
 		if err != nil {
-			errhand.InternalError("registration", "Page", "", err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 
@@ -46,7 +46,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 			templateData := TemplateReg{""}
 			err := page.Execute(w, templateData)
 			if err != nil {
-				errhand.InternalError("registration", "Page", "", err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			return
@@ -63,7 +63,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -74,7 +74,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -85,7 +85,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				templateData := TemplateReg{"<h2 style=\"color:red\">" + template.HTML(err.Error()) + "</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -97,7 +97,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return
@@ -112,7 +112,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 					templateData := TemplateReg{"<h2 style=\"color:red\">Username already used</h2>"}
 					err := page.Execute(w, templateData)
 					if err != nil {
-						errhand.InternalError("registration", "Page", "", err, w)
+						errhand.InternalError(err, w)
 						return
 					}
 					return
@@ -121,7 +121,7 @@ func Page(db *sql.DB) http.HandlerFunc {
 				templateData := TemplateReg{"<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
 				err := page.Execute(w, templateData)
 				if err != nil {
-					errhand.InternalError("registration", "Page", "", err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				return

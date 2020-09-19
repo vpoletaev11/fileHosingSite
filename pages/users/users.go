@@ -34,14 +34,14 @@ func Page(dep session.Dependency) http.HandlerFunc {
 		// creating template for index page
 		page, err := tmp.CreateTemplate(pathTemplateUsers)
 		if err != nil {
-			errhand.InternalError("users", "Page", dep.Username, err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 		switch r.Method {
 		case "GET":
 			rows, err := dep.Db.Query(selectUsers)
 			if err != nil {
-				errhand.InternalError("users", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			defer rows.Close()
@@ -55,7 +55,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 					&ui.Rating,
 				)
 				if err != nil {
-					errhand.InternalError("users", "Page", dep.Username, err, w)
+					errhand.InternalError(err, w)
 					return
 				}
 				usersInfo = append(usersInfo, ui)
@@ -63,7 +63,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 
 			err = page.Execute(w, TemplateUsers{Username: dep.Username, UserList: usersInfo})
 			if err != nil {
-				errhand.InternalError("users", "Page", dep.Username, err, w)
+				errhand.InternalError(err, w)
 				return
 			}
 			return

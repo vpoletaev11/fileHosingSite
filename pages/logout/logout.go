@@ -18,7 +18,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 
 		_, err = dep.Redis.Do("DEL", cookie.Value)
 		if err != nil {
-			errhand.InternalError("logout", "Page", "", err, w)
+			errhand.InternalError(err, w)
 			return
 		}
 

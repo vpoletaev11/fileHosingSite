@@ -307,24 +307,7 @@ func TestPageQuerySELECTErr(t *testing.T) {
 	sut(w, r)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	test.AssertBodyEqual(t, `<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="assets/css/login.css">
-<head>
-<body bgcolor=#f1ded3>
-    <div class="loginForm">
-        <form action="" method="post">
-            <p>Username: <input required maxlength="20" type="text" name="username"></p>
-            <p>Password: <input required maxlength="40" type="password" name="password"></p>
-            <input type="submit" value="Login">
-            <p><a href="/registration" style="color: #c82020">Not registered?</a></p>
-            <h2 style="color:red">INTERNAL ERROR. Please try later</h2>
-        </form>
-    </div>
-</body>`, w.Body)
+	test.AssertBodyEqual(t, "INTERNAL ERROR. Please try later\n", w.Body)
 }
 
 // TestPageSELECTReturnsEmptyPass tests case when SELECT query returns empty password

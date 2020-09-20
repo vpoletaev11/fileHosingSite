@@ -91,13 +91,7 @@ func Page(dep session.Dependency) http.HandlerFunc {
 					}
 					return
 				}
-				w.WriteHeader(500)
-				templateData := TemplateLog{Warning: "<h2 style=\"color:red\">INTERNAL ERROR. Please try later</h2>"}
-				err := page.Execute(w, templateData)
-				if err != nil {
-					errhand.InternalError(err, w)
-					return
-				}
+				errhand.InternalError(err, w)
 				return
 			}
 
